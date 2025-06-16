@@ -5,12 +5,38 @@ import { Car } from '../types/car'
 import { X, MessageCircle, Trash2, XCircle, CheckCircle, LogOut } from 'lucide-react'
 import { useSwipeable } from 'react-swipeable'
 import { useNavigate, useLocation } from 'react-router-dom'
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Dimensions,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const CARD_WIDTH = SCREEN_WIDTH - 32; // Full width minus padding
+
+type RootStackParamList = {
+  SwipeDeck: undefined;
+  Garage: undefined;
+  Submit: undefined;
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const Garage = () => {
   const [selectedCar, setSelectedCar] = useState<Car | null>(null)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const navigate = useNavigate()
   const location = useLocation()
+  const navigation = useNavigation<NavigationProp>();
   
   // Subscribe to both stores
   const { garageCars, removeFromGarage } = useGarageStore()
@@ -49,103 +75,108 @@ const Garage = () => {
     trackTouch: true
   })
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-gray-200">
-        <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
-            My Garage
-          </h1>
-          <div className="relative group">
-            <button
-              onClick={() => navigate('/')}
-              className="p-2 rounded-full transition-all duration-200 ease-in-out active:scale-95 active:bg-gray-100"
-              aria-label="Exit My Garage"
-              role="button"
-              tabIndex={0}
-            >
-              <LogOut className="w-6 h-6 text-gray-600 transition-colors duration-200 active:text-red-500" />
-            </button>
-            <div className="absolute right-0 top-full mt-2 px-3 py-1.5 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-              Return to browsing
-              <div className="absolute -top-1 right-4 w-2 h-2 bg-gray-900 transform rotate-45"></div>
-            </div>
-          </div>
-        </div>
-      </header>
+  const handleRemoveCar = (carId: number) => {
+    removeFromGarage(carId)
+    addToQueue(garageCars.find(car => car.id === carId) as Car)
+  }
 
-      <main className="max-w-md mx-auto px-4 py-8">
+  const renderCarCard = ({ item: car }: { item: Car }) => (
+    <View style={styles.cardContainer}>
+      <TouchableOpacity
+        style={styles.card}
+        activeOpacity={0.8}
+        onPress={() => setSelectedCar(car)}
+      >
+        <Image source={{ uri: car.image }} style={styles.image} />
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.6)']}
+          style={StyleSheet.absoluteFill}
+          locations={[0.5, 1]}
+        />
+        <View style={styles.cardContent}>
+          <Text style={styles.title}>
+            {car.year} {car.make} {car.model}
+          </Text>
+          <Text style={styles.subtitle}>
+            {car.mileage?.toLocaleString()} mi · {car.location}
+          </Text>
+          <Text style={styles.price}>${car.price?.toLocaleString()}</Text>
+        </View>
+      </TouchableOpacity>
+
+      <View style={styles.actionButtons}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          activeOpacity={0.8}
+          onPress={() => {
+            // TODO: Implement message seller
+            console.log('Message seller for:', car.id);
+          }}
+        >
+          <MessageCircle size={24} color="#3b82f6" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.actionButton}
+          activeOpacity={0.8}
+          onPress={() => handleRemoveCar(car.id)}
+        >
+          <Trash2 size={24} color="#ef4444" />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>My Garage</Text>
+      </View>
+      
+      <View style={styles.content}>
         {garageCars.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500">Your garage is empty</p>
             <p className="text-gray-400 text-sm mt-2">Swipe right on cars to add them to your garage</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {garageCars.map((car) => (
-              <div
-                key={car.id}
-                className="w-full max-w-sm mx-auto"
-              >
-                <div
-                  className="flex flex-row bg-white rounded-2xl shadow-md cursor-pointer hover:shadow-lg transition-all duration-200 py-4"
-                  onClick={() => setSelectedCar(car)}
-                >
-                  {/* Left side - Image */}
-                  <div className="w-36 flex-shrink-0">
-                    <img
-                      src={car.image}
-                      alt={`${car.make} ${car.model}`}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-
-                  {/* Right side - Content */}
-                  <div className="flex flex-col min-h-full px-4 flex-1">
-                    {/* Text content */}
-                    <div className="space-y-2">
-                      <h2 className="text-lg font-bold text-gray-900">
-                        {car.year} {car.make} {car.model}
-                      </h2>
-                      <div className="space-y-1">
-                        <p className="text-sm text-gray-600">{car.mileage.toLocaleString()} miles</p>
-                        <p className="text-sm text-gray-600">{car.location || 'Location Unknown'}</p>
-                        <p className="text-lg font-bold text-blue-600">${car.price.toLocaleString()}</p>
-                      </div>
-                    </div>
-
-                    {/* Action buttons */}
-                    <div className="flex gap-3 pt-3">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          // TODO: Implement message seller functionality
-                          console.log('Message seller:', car.id)
-                        }}
-                        className="w-10 h-10 p-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors"
-                        aria-label="Message Seller"
-                      >
-                        <MessageCircle className="w-full h-full" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          removeFromGarage(car.id)
-                          addToQueue(car)
-                        }}
-                        className="w-10 h-10 p-3 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                        aria-label="Remove from Garage"
-                      >
-                        <Trash2 className="w-full h-full" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <FlatList
+            data={garageCars}
+            renderItem={renderCarCard}
+            keyExtractor={(item) => item.id.toString()}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.listContent}
+            snapToInterval={CARD_WIDTH + 16} // Card width + padding
+            decelerationRate="fast"
+            snapToAlignment="center"
+          />
         )}
-      </main>
+      </View>
+
+      <View style={styles.bottomBar}>
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('SwipeDeck')} 
+          style={styles.tab}
+        >
+          <Ionicons name="home" size={24} color="#000" />
+          <Text style={styles.tabLabel}>Home</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('Garage')} 
+          style={styles.tab}
+        >
+          <Ionicons name="car" size={24} color="#000" />
+          <Text style={styles.tabLabel}>Garage</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('Submit')} 
+          style={styles.tab}
+        >
+          <Ionicons name="add-circle" size={24} color="#000" />
+          <Text style={styles.tabLabel}>Post</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Modal */}
       {selectedCar && (
@@ -302,7 +333,7 @@ const Garage = () => {
 
                 <button
                   onClick={() => {
-                    removeFromGarage(selectedCar.id)
+                    handleRemoveCar(selectedCar.id)
                     closeModal()
                   }}
                   className="w-full py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors"
@@ -314,8 +345,122 @@ const Garage = () => {
           </div>
         </div>
       )}
-    </div>
+    </SafeAreaView>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f0f0f0',
+  },
+  header: {
+    padding: 16,
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
+  listContent: {
+    paddingHorizontal: 16,
+  },
+  cardContainer: {
+    width: CARD_WIDTH,
+    marginRight: 16,
+  },
+  card: {
+    flex: 1,
+    borderRadius: 24,
+    backgroundColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+    overflow: 'hidden',
+  },
+  image: {
+    width: '100%',
+    height: '70%',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  cardContent: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    padding: 16,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: 'white',
+  },
+  subtitle: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.85)',
+    marginVertical: 2,
+  },
+  price: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#1CE1A9',
+    marginTop: 4,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 12,
+    gap: 24,
+  },
+  actionButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  bottomBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 10,
+    backgroundColor: 'white',
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  tab: {
+    alignItems: 'center',
+  },
+  tabLabel: {
+    marginTop: 4,
+    fontSize: 12,
+  },
+});
 
 export default Garage 

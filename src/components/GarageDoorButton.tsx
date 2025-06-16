@@ -30,21 +30,21 @@ export function GarageDoorButton() {
 
       {/* Group for the garage door slats, clipped by the defined path */}
       <g clipPath="url(#garageDoorClip)">
-        {/* Garage door slats */}
+      {/* Garage door slats */}
         {[0, 1, 2, 3].map(i => (
-          <rect
-            key={i}
+        <rect
+          key={i}
             x={9}
             y={isOpening ? 17 - (i * 2.5) - 15 : 17 + i * 2.5} // Animate y position upwards
             width={14}
             height={1.5}
-            rx={0.5}
-            fill="#4A5568"
+          rx={0.5}
+          fill="#4A5568"
             style={{
               transition: 'all 2.5s ease-in-out', // Smooth transition
             }}
-          />
-        ))}
+        />
+      ))}
       </g>
 
       {/* Garage walls and outline (drawn last to ensure strokes are on top) */}
