@@ -2,18 +2,22 @@ import React, { useState, useEffect } from 'react'
 import { useGarageStore } from '../store/garageStore'
 import { useSwipeQueueStore } from '../store/swipeQueueStore'
 import { Car } from '../types/car'
-import { X, ArrowLeft, MessageCircle, Trash2 } from 'lucide-react'
+import { X, MessageCircle, Trash2, XCircle, CheckCircle, LogOut } from 'lucide-react'
 import { useSwipeable } from 'react-swipeable'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 const Garage = () => {
   const [selectedCar, setSelectedCar] = useState<Car | null>(null)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const navigate = useNavigate()
+  const location = useLocation()
   
   // Subscribe to both stores
   const { garageCars, removeFromGarage } = useGarageStore()
   const { addToQueue } = useSwipeQueueStore()
+
+  // Helper function to check if a route is active
+  const isActive = (path: string) => location.pathname === path
 
   // Debug: Log garage state changes
   useEffect(() => {
@@ -49,16 +53,24 @@ const Garage = () => {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-gray-200">
         <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between">
-          <button
-            onClick={() => navigate('/')}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <ArrowLeft className="w-6 h-6 text-gray-600" />
-          </button>
           <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
             My Garage
           </h1>
-          <div className="w-10" /> {/* Spacer for alignment */}
+          <div className="relative group">
+            <button
+              onClick={() => navigate('/')}
+              className="p-2 rounded-full transition-all duration-200 ease-in-out active:scale-95 active:bg-gray-100"
+              aria-label="Exit My Garage"
+              role="button"
+              tabIndex={0}
+            >
+              <LogOut className="w-6 h-6 text-gray-600 transition-colors duration-200 active:text-red-500" />
+            </button>
+            <div className="absolute right-0 top-full mt-2 px-3 py-1.5 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+              Return to browsing
+              <div className="absolute -top-1 right-4 w-2 h-2 bg-gray-900 transform rotate-45"></div>
+            </div>
+          </div>
         </div>
       </header>
 

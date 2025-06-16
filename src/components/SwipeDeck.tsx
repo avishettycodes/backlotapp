@@ -1,37 +1,13 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import { XCircleIcon, CheckCircleIcon } from '@heroicons/react/24/solid'
 import { useSwipeable } from 'react-swipeable'
-import { Link } from 'react-router-dom'
-import { XCircle, CheckCircle, X } from "lucide-react"
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { XCircle, CheckCircle, X, Settings, CarFront, Plus } from "lucide-react"
 import { useGarageStore } from '../store/garageStore'
 import { useSwipeQueueStore } from '../store/swipeQueueStore'
 import { Car } from '../types/car'
-
-interface Car {
-  id: number
-  image: string
-  make: string
-  model: string
-  year: number
-  mileage: number
-  price: number
-  deal: 'good' | 'fair' | 'bad'
-  location?: string
-  priceRating?: string
-  sellerName?: string
-  title?: string
-  transmission?: string
-  listedDate?: string
-  exteriorColor?: string
-  interiorColor?: string
-  fuelType?: string
-  seats?: number
-  trim?: string
-  description?: string
-  pros?: string[]
-  cons?: string[]
-  images?: string[]
-}
+import { motion, AnimatePresence } from 'framer-motion'
+import { GarageDoorButton } from './GarageDoorButton'
 
 const cars: Car[] = [
   {
@@ -148,10 +124,14 @@ const SwipeDeck = () => {
   const { garageCars, addToGarage } = useGarageStore()
   const { carQueue, removeFromQueue, initializeQueue } = useSwipeQueueStore()
 
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [isGarageOpening, setIsGarageOpening] = useState(false)
+
   // Initialize carQueue with cars that are not in the garage
   useEffect(() => {
     const availableCars = cars.filter(car => 
-      nearbyCities.includes(car.location) && 
+      nearbyCities.includes(car.location || '') && 
       !garageCars.some(garageCar => garageCar.id === car.id)
     )
     console.log('SwipeDeck: Initializing car queue:', availableCars)
@@ -276,37 +256,64 @@ const SwipeDeck = () => {
 
   const imageSwipeHandlers = useSwipeable({
     onSwipedLeft: () => {
-      if (selectedCar?.images && currentImageIndex < selectedCar.images.length - 1) {
-        setCurrentImageIndex(currentImageIndex + 1);
+      if (!selectedCar) return
+      const images = selectedCar.images || [selectedCar.image]
+      if (currentImageIndex < images.length - 1) {
+        setCurrentImageIndex(currentImageIndex + 1)
       }
     },
     onSwipedRight: () => {
       if (currentImageIndex > 0) {
-        setCurrentImageIndex(currentImageIndex - 1);
+        setCurrentImageIndex(currentImageIndex - 1)
       }
     },
-    preventDefaultTouchmoveEvent: true,
     trackMouse: true,
     delta: 100,
     swipeDuration: 500,
-    touchEventOptions: { passive: false },
     trackTouch: true,
-    rotationAngle: 0,
-    threshold: 100,
-    velocity: 0.3,
+    rotationAngle: 0
   })
+
+  const isActive = (path: string) => location.pathname === path
+
+  const handleGarageClick = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    setIsGarageOpening(true)
+    await new Promise((resolve) => setTimeout(resolve, 1200))
+    navigate('/mygarage')
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-gray-200">
-        <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-10 bg-white shadow-sm">
+        <div className="flex justify-between items-center px-4 py-3 max-w-md mx-auto">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
             Backlot
           </h1>
-          <nav className="flex gap-4">
-            <Link to="/" className="text-gray-600 hover:text-blue-600">Home</Link>
-            <Link to="/garage" className="text-gray-600 hover:text-blue-600">Garage</Link>
-            <Link to="/submit" className="text-gray-600 hover:text-blue-600">Submit</Link>
+          <nav className="flex items-center space-x-3">
+            <GarageDoorButton />
+            <Link 
+              to="/submit" 
+              className="relative p-2 rounded-full hover:bg-gray-100 transition-all duration-200 group"
+              title="Post your car"
+              aria-label="Post your car"
+            >
+              <div className="relative group-hover:scale-110 transition-transform duration-200">
+                <CarFront className="w-6 h-6 text-gray-700 group-hover:text-blue-600" />
+                <div className="absolute -top-1 -right-1">
+                  <span className="absolute w-4 h-4 rounded-full bg-blue-400 opacity-75 group-hover:animate-ping z-0" />
+                  <div className="relative z-10 w-4 h-4 bg-blue-500 text-white rounded-full flex items-center justify-center">
+                    <Plus className="w-3 h-3" />
+                  </div>
+                </div>
+              </div>
+            </Link>
+            <Link 
+              to="/settings" 
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <Settings className="w-5 h-5 text-gray-600" />
+            </Link>
           </nav>
         </div>
       </header>
@@ -391,22 +398,26 @@ const SwipeDeck = () => {
 
               {/* Image Carousel */}
               <div {...imageSwipeHandlers} className="relative h-[300px] bg-gray-100">
-                <img
-                  src={selectedCar.images?.[currentImageIndex] || selectedCar.image}
-                  alt={`${selectedCar.year} ${selectedCar.make} ${selectedCar.model}`}
-                  className="w-full h-full object-cover rounded-t-2xl"
-                />
-                {selectedCar.images && selectedCar.images.length > 1 && (
-                  <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-                    {selectedCar.images.map((_, index) => (
-                      <div
-                        key={index}
-                        className={`w-2 h-2 rounded-full ${
-                          index === currentImageIndex ? 'bg-white' : 'bg-white/50'
-                        }`}
-                      />
-                    ))}
-                  </div>
+                {selectedCar && (
+                  <>
+                    <img
+                      src={selectedCar.images?.[currentImageIndex] ?? selectedCar.image}
+                      alt={`${selectedCar.year} ${selectedCar.make} ${selectedCar.model}`}
+                      className="w-full h-full object-cover rounded-t-2xl"
+                    />
+                    {Array.isArray(selectedCar.images) && selectedCar.images.length > 1 && (
+                      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+                        {selectedCar.images.map((_, index) => (
+                          <div
+                            key={index}
+                            className={`w-2 h-2 rounded-full ${
+                              index === currentImageIndex ? 'bg-white' : 'bg-white/50'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
@@ -503,7 +514,7 @@ const SwipeDeck = () => {
 
                     {(selectedCar.pros?.length || selectedCar.cons?.length) && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {selectedCar.pros?.length > 0 && (
+                        {selectedCar.pros && selectedCar.pros.length > 0 && (
                           <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                             <h4 className="font-semibold text-green-700 mb-1">Pros</h4>
                             <ul className="list-disc list-inside text-sm text-gray-700">
@@ -513,7 +524,7 @@ const SwipeDeck = () => {
                             </ul>
                           </div>
                         )}
-                        {selectedCar.cons?.length > 0 && (
+                        {selectedCar.cons && selectedCar.cons.length > 0 && (
                           <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                             <h4 className="font-semibold text-red-700 mb-1">Cons</h4>
                             <ul className="list-disc list-inside text-sm text-gray-700">

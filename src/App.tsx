@@ -6,7 +6,7 @@ import Garage from './components/Garage'
 function Submit() {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <h1 className="text-4xl font-bold">Submit page</h1>
+      <h1 className="text-4xl font-bold">Submit a car</h1>
     </div>
   )
 }
@@ -16,7 +16,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<SwipeDeck />} />
-        <Route path="/garage" element={<Garage />} />
+        <Route path="/mygarage" element={<Garage />} />
         <Route path="/submit" element={<Submit />} />
       </Routes>
     </Router>
