@@ -3,14 +3,18 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import SwipeDeck from './src/components/SwipeDeck';
+import Garage from './src/components/Garage';
+import Submit from './src/components/Submit';
 
-// Placeholder components - we'll create these next
-const SwipeDeck = () => null;
-const Garage = () => null;
-const Post = () => null;
-const Settings = () => null;
+export type RootTabParamList = {
+  Home: undefined;
+  Garage: undefined;
+  Post: undefined;
+};
 
-const Tab = createBottomTabNavigator();
+const Tab = createBottomTabNavigator<RootTabParamList>();
 
 export default function App() {
   return (
@@ -31,9 +35,6 @@ export default function App() {
                 case 'Post':
                   iconName = focused ? 'add-circle' : 'add-circle-outline';
                   break;
-                case 'Settings':
-                  iconName = focused ? 'settings' : 'settings-outline';
-                  break;
                 default:
                   iconName = 'help-outline';
               }
@@ -47,9 +48,9 @@ export default function App() {
         >
           <Tab.Screen name="Home" component={SwipeDeck} />
           <Tab.Screen name="Garage" component={Garage} />
-          <Tab.Screen name="Post" component={Post} />
-          <Tab.Screen name="Settings" component={Settings} />
+          <Tab.Screen name="Post" component={Submit} />
         </Tab.Navigator>
+        <StatusBar style="auto" />
       </NavigationContainer>
     </SafeAreaProvider>
   );
