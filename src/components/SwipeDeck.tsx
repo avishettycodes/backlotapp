@@ -143,13 +143,12 @@ const SwipeDeck = () => {
   const [touchStartX, setTouchStartX] = useState(0)
   const [touchStartY, setTouchStartY] = useState(0)
   const [carQueue, setCarQueue] = useState(cars.filter(car => nearbyCities.includes(car.location)))
-  const { addToGarage } = useGarageStore()
 
   const handleSwipe = useCallback((direction?: 'left' | 'right') => {
     const currentCar = carQueue[currentIndex]
     
     if (direction === 'right' && currentCar) {
-      addToGarage(currentCar)
+      useGarageStore.getState().addToGarage(currentCar)
       setCarQueue(prev => prev.filter(car => car.id !== currentCar.id))
     }
 
@@ -160,7 +159,7 @@ const SwipeDeck = () => {
     setSwipeX(0)
     setSwipeY(0)
     setIsSwiping(false)
-  }, [currentIndex, carQueue, addToGarage])
+  }, [currentIndex, carQueue])
 
   const handleCardClick = (car: Car, event: React.MouseEvent | React.TouchEvent) => {
     // Get the correct coordinates based on event type

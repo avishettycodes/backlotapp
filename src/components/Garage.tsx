@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useGarageStore } from '../store/garageStore'
 import { Car } from '../types/car'
 import { X, ArrowLeft } from 'lucide-react'
@@ -6,10 +6,16 @@ import { useSwipeable } from 'react-swipeable'
 import { useNavigate } from 'react-router-dom'
 
 const Garage = () => {
-  const { garageCars, removeFromGarage } = useGarageStore()
+  const garageCars = useGarageStore((state) => state.garageCars)
+  const removeFromGarage = useGarageStore((state) => state.removeFromGarage)
   const [selectedCar, setSelectedCar] = useState<Car | null>(null)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const navigate = useNavigate()
+
+  // Debug logging
+  useEffect(() => {
+    console.log('Garage Cars:', garageCars)
+  }, [garageCars])
 
   const handleCloseModal = () => {
     setSelectedCar(null)
