@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { XCircleIcon, CheckCircleIcon } from '@heroicons/react/24/solid'
 import { useSwipeable } from 'react-swipeable'
 import { Link } from 'react-router-dom'
@@ -143,23 +143,45 @@ const SwipeDeck = () => {
   const [touchStartX, setTouchStartX] = useState(0)
   const [touchStartY, setTouchStartY] = useState(0)
   const [carQueue, setCarQueue] = useState(cars.filter(car => nearbyCities.includes(car.location)))
+  
+  // Get both the garage state and addToGarage function
+  const { garageCars, addToGarage } = useGarageStore()
+
+  // Debug: Log initial states
+  useEffect(() => {
+    console.log('SwipeDeck mounted')
+    console.log('Initial car queue:', carQueue)
+    console.log('Initial garage state:', garageCars)
+  }, [])
 
   const handleSwipe = useCallback((direction?: 'left' | 'right') => {
     const currentCar = carQueue[currentIndex]
     
     if (direction === 'right' && currentCar) {
-      useGarageStore.getState().addToGarage(currentCar)
-      setCarQueue(prev => prev.filter(car => car.id !== currentCar.id))
+      console.log('SwipeDeck: Attempting to add to garage:', currentCar)
+      // Add to garage store
+      addToGarage(currentCar)
+      console.log('SwipeDeck: Current garage state after add:', useGarageStore.getState().garageCars)
+      
+      // Immediately remove from local queue
+      setCarQueue(prev => {
+        const newQueue = prev.filter(car => car.id !== currentCar.id)
+        console.log('SwipeDeck: Updated car queue:', newQueue)
+        return newQueue
+      })
     }
 
+    // Move to next card if available
     if (currentIndex < carQueue.length - 1) {
       setCurrentIndex(currentIndex + 1)
     }
+    
+    // Reset swipe state
     setShowIndicator(null)
     setSwipeX(0)
     setSwipeY(0)
     setIsSwiping(false)
-  }, [currentIndex, carQueue])
+  }, [currentIndex, carQueue, addToGarage])
 
   const handleCardClick = (car: Car, event: React.MouseEvent | React.TouchEvent) => {
     // Get the correct coordinates based on event type
@@ -181,41 +203,36 @@ const SwipeDeck = () => {
   }
 
   const swipeHandlers = useSwipeable({
-    onSwiping: (event) => {
+    onSwiping: (e) => {
       setIsSwiping(true)
-      setSwipeX(event.deltaX)
-      setSwipeY(event.deltaY)
-      if (event.dir === 'Left' && event.absX > 50) {
-        setShowIndicator('left')
-      } else if (event.dir === 'Right' && event.absX > 50) {
+      setSwipeX(e.deltaX)
+      setSwipeY(e.deltaY)
+      
+      // Show indicator based on swipe direction
+      if (e.deltaX > 50) {
         setShowIndicator('right')
+      } else if (e.deltaX < -50) {
+        setShowIndicator('left')
       } else {
         setShowIndicator(null)
       }
     },
-    onSwiped: (event) => {
-      if (event.dir === 'Left' || event.dir === 'Right') {
-        handleSwipe()
+    onSwiped: (e) => {
+      const swipeThreshold = 100
+      if (Math.abs(e.deltaX) > swipeThreshold) {
+        handleSwipe(e.deltaX > 0 ? 'right' : 'left')
+      } else {
+        // Reset if swipe wasn't strong enough
+        setShowIndicator(null)
+        setSwipeX(0)
+        setSwipeY(0)
+        setIsSwiping(false)
       }
-      setShowIndicator(null)
-      setSwipeX(0)
-      setSwipeY(0)
-      setIsSwiping(false)
-    },
-    onTouchStartOrOnMouseDown: (event) => {
-      setTouchStartTime(Date.now())
-      const clientX = 'touches' in event.event ? event.event.touches[0].clientX : event.event.clientX
-      const clientY = 'touches' in event.event ? event.event.touches[0].clientY : event.event.clientY
-      setTouchStartX(clientX)
-      setTouchStartY(clientY)
     },
     trackMouse: true,
-    trackTouch: true,
-    delta: 100,
+    delta: 10,
     swipeDuration: 500,
-    touchEventOptions: { passive: false },
-    rotationAngle: 0,
-    preventDefaultTouchmoveEvent: true,
+    preventScrollOnSwipe: true,
   })
 
   const cardStyle = {

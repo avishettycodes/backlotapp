@@ -6,19 +6,24 @@ import { useSwipeable } from 'react-swipeable'
 import { useNavigate } from 'react-router-dom'
 
 const Garage = () => {
-  const garageCars = useGarageStore((state) => state.garageCars)
-  const removeFromGarage = useGarageStore((state) => state.removeFromGarage)
   const [selectedCar, setSelectedCar] = useState<Car | null>(null)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  
+  // Subscribe to the entire garage state
+  const { garageCars, removeFromGarage } = useGarageStore()
+
   const navigate = useNavigate()
 
-  // Debug logging
+  // Debug: Log garage state changes
   useEffect(() => {
-    console.log('Garage Cars:', garageCars)
+    console.log('Garage component mounted/updated')
+    console.log('Current garage cars:', garageCars)
+    console.log('Garage cars length:', garageCars.length)
   }, [garageCars])
 
-  const handleCloseModal = () => {
+  const closeModal = () => {
     setSelectedCar(null)
+    setCurrentImageIndex(0)
   }
 
   const handleImageSwipe = (direction: 'left' | 'right') => {
@@ -51,55 +56,48 @@ const Garage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-gray-200">
-        <div className="max-w-[400px] mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
-            Backlot
-          </h1>
+      <header className="bg-white shadow-sm">
+        <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between">
           <button
             onClick={() => navigate('/')}
-            className="p-2 text-gray-600 hover:text-blue-600 transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
           >
-            <ArrowLeft className="w-6 h-6" />
+            <ArrowLeft className="w-6 h-6 text-gray-600" />
           </button>
+          <h1 className="text-xl font-semibold text-gray-800">My Garage</h1>
+          <div className="w-10" /> {/* Spacer for alignment */}
         </div>
       </header>
 
-      <main className="max-w-[400px] mx-auto px-4 py-8">
+      <main className="max-w-md mx-auto px-4 py-8">
         {garageCars.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-2xl shadow-md p-6">
-            <h2 className="text-xl text-gray-600">Your garage is empty</h2>
-            <p className="text-gray-500 mt-2">Swipe right on cars you like to add them here</p>
+          <div className="text-center py-12">
+            <p className="text-gray-500">Your garage is empty</p>
+            <p className="text-gray-400 text-sm mt-2">Swipe right on cars to add them to your garage</p>
           </div>
         ) : (
-          <div className="overflow-x-auto pb-4 -mx-4 px-4">
-            <div className="flex space-x-4 min-w-min">
-              {garageCars.map((car) => (
-                <div
-                  key={car.id}
-                  className="flex-none w-[280px] bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
-                  onClick={() => {
-                    setSelectedCar(car)
-                    setCurrentImageIndex(0)
-                  }}
-                >
-                  <div className="relative h-48">
-                    <img
-                      src={car.image}
-                      alt={`${car.year} ${car.make} ${car.model}`}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                      <h3 className="text-lg font-semibold">
-                        {car.year} {car.make} {car.model}
-                      </h3>
-                      <p className="text-sm opacity-90">${car.price.toLocaleString()}</p>
-                    </div>
-                  </div>
+          <div className="grid grid-cols-1 gap-4">
+            {garageCars.map((car) => (
+              <div
+                key={car.id}
+                className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => setSelectedCar(car)}
+              >
+                <div className="relative h-48">
+                  <img
+                    src={car.image}
+                    alt={`${car.make} ${car.model}`}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-              ))}
-            </div>
+                <div className="p-4">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    {car.year} {car.make} {car.model}
+                  </h3>
+                  <p className="text-gray-600">${car.price.toLocaleString()}</p>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </main>
@@ -107,12 +105,12 @@ const Garage = () => {
       {/* Vehicle Details Modal */}
       {selectedCar && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={handleCloseModal} />
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={closeModal} />
           <div className="relative min-h-screen flex items-center justify-center p-4">
             <div className="relative bg-white rounded-2xl w-full max-w-[400px] max-h-[90vh] overflow-hidden shadow-xl">
               {/* Close Button */}
               <button
-                onClick={handleCloseModal}
+                onClick={closeModal}
                 className="absolute top-4 right-4 z-10 p-2 bg-black/50 rounded-full text-white hover:bg-black/70 transition-colors"
               >
                 <X className="w-6 h-6" />
@@ -261,7 +259,7 @@ const Garage = () => {
                 <button
                   onClick={() => {
                     removeFromGarage(selectedCar.id)
-                    handleCloseModal()
+                    closeModal()
                   }}
                   className="w-full py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                 >

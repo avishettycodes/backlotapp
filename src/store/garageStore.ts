@@ -12,21 +12,35 @@ export const useGarageStore = create<GarageStore>()(
   persist(
     (set) => ({
       garageCars: [],
-      addToGarage: (car) =>
+      addToGarage: (car) => {
+        console.log('Store: Adding car to garage:', car)
         set((state) => {
-          // Check if car already exists in garage
+          // Check if car already exists
           if (state.garageCars.some((c) => c.id === car.id)) {
+            console.log('Store: Car already in garage')
             return state
           }
-          return { garageCars: [...state.garageCars, car] }
-        }),
-      removeFromGarage: (carId) =>
-        set((state) => ({
-          garageCars: state.garageCars.filter((car) => car.id !== carId),
-        })),
+          const newState = { garageCars: [...state.garageCars, car] }
+          console.log('Store: New garage state:', newState)
+          return newState
+        })
+      },
+      removeFromGarage: (carId) => {
+        console.log('Store: Removing car from garage:', carId)
+        set((state) => {
+          const newState = {
+            garageCars: state.garageCars.filter((car) => car.id !== carId),
+          }
+          console.log('Store: New garage state after removal:', newState)
+          return newState
+        })
+      },
     }),
     {
-      name: 'garage-storage', // key in localStorage
+      name: 'garage-storage', // stored in localStorage
+      onRehydrateStorage: () => (state) => {
+        console.log('Store: Hydrated state:', state)
+      },
     }
   )
 ) 
