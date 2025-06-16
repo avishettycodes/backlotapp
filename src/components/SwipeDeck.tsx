@@ -3,6 +3,8 @@ import { XCircleIcon, CheckCircleIcon } from '@heroicons/react/24/solid'
 import { useSwipeable } from 'react-swipeable'
 import { Link } from 'react-router-dom'
 import { XCircle, CheckCircle, X } from "lucide-react"
+import { useGarageStore } from '../store/garageStore'
+import { Car } from '../types/car'
 
 interface Car {
   id: number
@@ -140,18 +142,25 @@ const SwipeDeck = () => {
   const [touchStartTime, setTouchStartTime] = useState(0)
   const [touchStartX, setTouchStartX] = useState(0)
   const [touchStartY, setTouchStartY] = useState(0)
+  const [carQueue, setCarQueue] = useState(cars.filter(car => nearbyCities.includes(car.location)))
+  const { addToGarage } = useGarageStore()
 
-  const filteredCars = cars.filter(car => nearbyCities.includes(car.location))
+  const handleSwipe = useCallback((direction?: 'left' | 'right') => {
+    const currentCar = carQueue[currentIndex]
+    
+    if (direction === 'right' && currentCar) {
+      addToGarage(currentCar)
+      setCarQueue(prev => prev.filter(car => car.id !== currentCar.id))
+    }
 
-  const handleSwipe = useCallback(() => {
-    if (currentIndex < filteredCars.length - 1) {
+    if (currentIndex < carQueue.length - 1) {
       setCurrentIndex(currentIndex + 1)
     }
     setShowIndicator(null)
     setSwipeX(0)
     setSwipeY(0)
     setIsSwiping(false)
-  }, [currentIndex, filteredCars.length])
+  }, [currentIndex, carQueue, addToGarage])
 
   const handleCardClick = (car: Car, event: React.MouseEvent | React.TouchEvent) => {
     // Get the correct coordinates based on event type
@@ -203,10 +212,11 @@ const SwipeDeck = () => {
     },
     trackMouse: true,
     trackTouch: true,
-    delta: 10,
+    delta: 100,
     swipeDuration: 500,
     touchEventOptions: { passive: false },
     rotationAngle: 0,
+    preventDefaultTouchmoveEvent: true,
   })
 
   const cardStyle = {
@@ -214,7 +224,7 @@ const SwipeDeck = () => {
     transition: isSwiping ? 'none' : 'transform 0.3s ease-out',
   }
 
-  const currentCar = filteredCars[currentIndex]
+  const currentCar = carQueue[currentIndex]
 
   const handleCloseModal = () => {
     setSelectedCar(null)
@@ -242,7 +252,7 @@ const SwipeDeck = () => {
     },
     preventDefaultTouchmoveEvent: true,
     trackMouse: true,
-    delta: 50,
+    delta: 100,
     swipeDuration: 500,
     touchEventOptions: { passive: false },
     trackTouch: true,
@@ -268,7 +278,7 @@ const SwipeDeck = () => {
 
       <main className="max-w-md mx-auto px-4 py-8">
         <div className="relative h-[600px]">
-          {filteredCars.map((car, index) => (
+          {carQueue.map((car, index) => (
             <div
               key={car.id}
               className={`absolute w-full h-full transition-all duration-300 ${

@@ -1,19 +1,12 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import SwipeDeck from './components/SwipeDeck'
-
-function Garage() {
-  return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <h1 className="text-4xl font-bold">Garage page</h1>
-    </div>
-  )
-}
+import Garage from './components/Garage'
 
 function Submit() {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <h1 className="text-4xl font-bold">Submit a car</h1>
+      <h1 className="text-4xl font-bold">Submit page</h1>
     </div>
   )
 }
