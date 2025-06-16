@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .swipe-success {
+    animation: swipeSuccess 0.3s ease-out;
+  }
+
+  .swipe-shake {
+    animation: swipeShake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+  }
+
+  .bg-hero {
+    background: url('https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?ixlib=rb-4.0.3') center / cover no-repeat;
+    filter: brightness(0.8) blur(12px);
+  }
+
+  .card-shadow {
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+  }
+}
+
+@keyframes swipeSuccess {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes swipeShake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+} 
