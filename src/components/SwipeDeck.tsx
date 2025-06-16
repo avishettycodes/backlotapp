@@ -4,6 +4,7 @@ import { useSwipeable } from 'react-swipeable'
 import { Link } from 'react-router-dom'
 import { XCircle, CheckCircle, X } from "lucide-react"
 import { useGarageStore } from '../store/garageStore'
+import { useSwipeQueueStore } from '../store/swipeQueueStore'
 import { Car } from '../types/car'
 
 interface Car {
@@ -142,10 +143,29 @@ const SwipeDeck = () => {
   const [touchStartTime, setTouchStartTime] = useState(0)
   const [touchStartX, setTouchStartX] = useState(0)
   const [touchStartY, setTouchStartY] = useState(0)
-  const [carQueue, setCarQueue] = useState(cars.filter(car => nearbyCities.includes(car.location)))
   
   // Get both the garage state and addToGarage function
   const { garageCars, addToGarage } = useGarageStore()
+  const { carQueue, removeFromQueue, initializeQueue } = useSwipeQueueStore()
+
+  // Initialize carQueue with cars that are not in the garage
+  useEffect(() => {
+    const availableCars = cars.filter(car => 
+      nearbyCities.includes(car.location) && 
+      !garageCars.some(garageCar => garageCar.id === car.id)
+    )
+    console.log('SwipeDeck: Initializing car queue:', availableCars)
+    initializeQueue(availableCars)
+  }, [garageCars, initializeQueue])
+
+  // Update carQueue when garageCars changes
+  useEffect(() => {
+    carQueue.forEach(car => {
+      if (garageCars.some(garageCar => garageCar.id === car.id)) {
+        removeFromQueue(car.id)
+      }
+    })
+  }, [garageCars, carQueue, removeFromQueue])
 
   // Debug: Log initial states
   useEffect(() => {
@@ -156,32 +176,31 @@ const SwipeDeck = () => {
 
   const handleSwipe = useCallback((direction?: 'left' | 'right') => {
     const currentCar = carQueue[currentIndex]
+    if (!currentCar) return
+
+    // Remove the current car from the queue first
+    removeFromQueue(currentCar.id)
     
-    if (direction === 'right' && currentCar) {
-      console.log('SwipeDeck: Attempting to add to garage:', currentCar)
-      // Add to garage store
+    // If swiped right, add to garage
+    if (direction === 'right') {
+      console.log('SwipeDeck: Adding to garage:', currentCar)
       addToGarage(currentCar)
-      console.log('SwipeDeck: Current garage state after add:', useGarageStore.getState().garageCars)
-      
-      // Immediately remove from local queue
-      setCarQueue(prev => {
-        const newQueue = prev.filter(car => car.id !== currentCar.id)
-        console.log('SwipeDeck: Updated car queue:', newQueue)
-        return newQueue
-      })
     }
 
-    // Move to next card if available
-    if (currentIndex < carQueue.length - 1) {
-      setCurrentIndex(currentIndex + 1)
-    }
-    
     // Reset swipe state
     setShowIndicator(null)
     setSwipeX(0)
     setSwipeY(0)
     setIsSwiping(false)
-  }, [currentIndex, carQueue, addToGarage])
+
+    // Update current index after queue modification
+    const newQueue = carQueue.filter(car => car.id !== currentCar.id)
+    if (newQueue.length === 0) {
+      setCurrentIndex(0)
+    } else if (currentIndex >= newQueue.length) {
+      setCurrentIndex(newQueue.length - 1)
+    }
+  }, [currentIndex, carQueue, addToGarage, removeFromQueue])
 
   const handleCardClick = (car: Car, event: React.MouseEvent | React.TouchEvent) => {
     // Get the correct coordinates based on event type

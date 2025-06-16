@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react'
 import { useGarageStore } from '../store/garageStore'
+import { useSwipeQueueStore } from '../store/swipeQueueStore'
 import { Car } from '../types/car'
-import { X, ArrowLeft } from 'lucide-react'
+import { X, ArrowLeft, MessageCircle, Trash2 } from 'lucide-react'
 import { useSwipeable } from 'react-swipeable'
 import { useNavigate } from 'react-router-dom'
 
 const Garage = () => {
   const [selectedCar, setSelectedCar] = useState<Car | null>(null)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  
-  // Subscribe to the entire garage state
-  const { garageCars, removeFromGarage } = useGarageStore()
-
   const navigate = useNavigate()
+  
+  // Subscribe to both stores
+  const { garageCars, removeFromGarage } = useGarageStore()
+  const { addToQueue } = useSwipeQueueStore()
 
   // Debug: Log garage state changes
   useEffect(() => {
@@ -26,37 +27,27 @@ const Garage = () => {
     setCurrentImageIndex(0)
   }
 
-  const handleImageSwipe = (direction: 'left' | 'right') => {
-    if (!selectedCar?.images) return
-    if (direction === 'left') {
-      setCurrentImageIndex((prev) => (prev + 1) % selectedCar.images.length)
-    } else {
-      setCurrentImageIndex((prev) => (prev - 1 + selectedCar.images.length) % selectedCar.images.length)
-    }
-  }
-
-  const imageSwipeHandlers = useSwipeable({
+  const handleImageSwipe = useSwipeable({
     onSwipedLeft: () => {
       if (selectedCar?.images && currentImageIndex < selectedCar.images.length - 1) {
-        setCurrentImageIndex(currentImageIndex + 1)
+        setCurrentImageIndex(prev => prev + 1)
       }
     },
     onSwipedRight: () => {
       if (currentImageIndex > 0) {
-        setCurrentImageIndex(currentImageIndex - 1)
+        setCurrentImageIndex(prev => prev - 1)
       }
     },
     trackMouse: true,
-    delta: 100,
+    delta: 10,
     swipeDuration: 500,
-    touchEventOptions: { passive: false },
-    trackTouch: true,
-    rotationAngle: 0,
+    preventScrollOnSwipe: true,
+    trackTouch: true
   })
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-      <header className="bg-white shadow-sm">
+      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-gray-200">
         <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between">
           <button
             onClick={() => navigate('/')}
@@ -64,7 +55,9 @@ const Garage = () => {
           >
             <ArrowLeft className="w-6 h-6 text-gray-600" />
           </button>
-          <h1 className="text-xl font-semibold text-gray-800">My Garage</h1>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+            My Garage
+          </h1>
           <div className="w-10" /> {/* Spacer for alignment */}
         </div>
       </header>
@@ -76,25 +69,65 @@ const Garage = () => {
             <p className="text-gray-400 text-sm mt-2">Swipe right on cars to add them to your garage</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4">
+          <div className="space-y-4">
             {garageCars.map((car) => (
               <div
                 key={car.id}
-                className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => setSelectedCar(car)}
+                className="w-full max-w-sm mx-auto"
               >
-                <div className="relative h-48">
-                  <img
-                    src={car.image}
-                    alt={`${car.make} ${car.model}`}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    {car.year} {car.make} {car.model}
-                  </h3>
-                  <p className="text-gray-600">${car.price.toLocaleString()}</p>
+                <div
+                  className="flex flex-row bg-white rounded-2xl shadow-md cursor-pointer hover:shadow-lg transition-all duration-200 py-4"
+                  onClick={() => setSelectedCar(car)}
+                >
+                  {/* Left side - Image */}
+                  <div className="w-36 flex-shrink-0">
+                    <img
+                      src={car.image}
+                      alt={`${car.make} ${car.model}`}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+
+                  {/* Right side - Content */}
+                  <div className="flex flex-col min-h-full px-4 flex-1">
+                    {/* Text content */}
+                    <div className="space-y-2">
+                      <h2 className="text-lg font-bold text-gray-900">
+                        {car.year} {car.make} {car.model}
+                      </h2>
+                      <div className="space-y-1">
+                        <p className="text-sm text-gray-600">{car.mileage.toLocaleString()} miles</p>
+                        <p className="text-sm text-gray-600">{car.location || 'Location Unknown'}</p>
+                        <p className="text-lg font-bold text-blue-600">${car.price.toLocaleString()}</p>
+                      </div>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="flex gap-3 pt-3">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          // TODO: Implement message seller functionality
+                          console.log('Message seller:', car.id)
+                        }}
+                        className="w-10 h-10 p-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors"
+                        aria-label="Message Seller"
+                      >
+                        <MessageCircle className="w-full h-full" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          removeFromGarage(car.id)
+                          addToQueue(car)
+                        }}
+                        className="w-10 h-10 p-3 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                        aria-label="Remove from Garage"
+                      >
+                        <Trash2 className="w-full h-full" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
@@ -102,12 +135,12 @@ const Garage = () => {
         )}
       </main>
 
-      {/* Vehicle Details Modal */}
+      {/* Modal */}
       {selectedCar && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={closeModal} />
           <div className="relative min-h-screen flex items-center justify-center p-4">
-            <div className="relative bg-white rounded-2xl w-full max-w-[400px] max-h-[90vh] overflow-hidden shadow-xl">
+            <div className="relative bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden shadow-xl">
               {/* Close Button */}
               <button
                 onClick={closeModal}
@@ -117,7 +150,7 @@ const Garage = () => {
               </button>
 
               {/* Image Carousel */}
-              <div {...imageSwipeHandlers} className="relative h-[300px] bg-gray-100">
+              <div {...handleImageSwipe} className="relative h-[300px] bg-gray-100">
                 <img
                   src={selectedCar.images?.[currentImageIndex] || selectedCar.image}
                   alt={`${selectedCar.year} ${selectedCar.make} ${selectedCar.model}`}
@@ -255,13 +288,12 @@ const Garage = () => {
                   </div>
                 )}
 
-                {/* Remove from Garage Button */}
                 <button
                   onClick={() => {
                     removeFromGarage(selectedCar.id)
                     closeModal()
                   }}
-                  className="w-full py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                  className="w-full py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors"
                 >
                   Remove from Garage
                 </button>
