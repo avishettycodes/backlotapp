@@ -1,109 +1,123 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, PanResponder, Animated } from 'react-native';
+import React, { useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  Dimensions,
+  Animated,
+  PanResponder,
+  StatusBar,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import CarDetailModal from './CarDetailModal';
+import { Car } from '../types/car';
 import { useGarageStore } from '../store/garageStore';
 import { useSwipeQueueStore } from '../store/swipeQueueStore';
-import { Car } from '../types/car';
-import CarDetailModal from './CarDetailModal';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = SCREEN_WIDTH - 32;
-const SWIPE_THRESHOLD = 120;
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
+const SWIPE_OUT_DURATION = 250;
 
 // Sample car data
 const sampleCars: Car[] = [
   {
     id: 1,
-    image: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-    images: [
-      'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-      'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-      'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-      'https://images.unsplash.com/photo-1563720223185-11003d516935?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-    ],
-    make: 'Toyota',
-    model: 'Camry',
     year: 2020,
+    make: "Toyota",
+    model: "Camry",
     price: 35000,
     mileage: 45000,
-    deal: 'good',
-    location: 'Los Angeles, CA',
-    description: 'Well maintained Toyota Camry with low mileage and excellent condition.',
-    priceRating: 'Great Deal',
-    sellerName: 'John Doe',
-    transmission: 'Automatic',
-    fuelType: 'Gasoline',
+    location: "Los Angeles, CA",
+    image: "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+      "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+      "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+      "https://images.unsplash.com/photo-1563720223185-11003d516935?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+    ],
+    description: "Well maintained Toyota Camry with low mileage and excellent condition.",
+    sellerName: "John Doe",
+    listedDate: "2024-12-15",
+    priceRating: "Great Deal",
+    deal: "good",
+    exteriorColor: "Blue",
+    interiorColor: "Black",
+    transmission: "Automatic",
+    fuelType: "Gasoline",
+    trim: "SE",
     seats: 5,
-    trim: 'SE',
-    exteriorColor: 'Blue',
-    interiorColor: 'Black',
-    listedDate: '2024-12-15',
-    pros: ['Reliable', 'Comfortable', 'Good fuel economy'],
-    cons: ['Expensive to maintain', 'Small trunk space'],
+    pros: ["Reliable", "Comfortable", "Good fuel economy"],
+    cons: ["Expensive to maintain", "Small trunk space"]
   },
   {
     id: 2,
-    image: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-    images: [
-      'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-      'https://images.unsplash.com/photo-1563720223185-11003d516935?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-      'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-    ],
-    make: 'Honda',
-    model: 'Civic',
     year: 2021,
+    make: "Honda",
+    model: "Civic",
     price: 28000,
     mileage: 32000,
-    deal: 'fair',
-    location: 'San Francisco, CA',
-    description: 'Sporty Honda Civic with great fuel economy and modern features.',
-    sellerName: 'Jane Smith',
-    transmission: 'Automatic',
-    fuelType: 'Gasoline',
+    location: "San Francisco, CA",
+    image: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+      "https://images.unsplash.com/photo-1563720223185-11003d516935?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+      "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+    ],
+    description: "Sporty Honda Civic with great fuel economy and modern features.",
+    sellerName: "Jane Smith",
+    listedDate: "2024-12-10",
+    priceRating: "Fair Price",
+    deal: "fair",
+    exteriorColor: "Red",
+    interiorColor: "Gray",
+    transmission: "Automatic",
+    fuelType: "Gasoline",
+    trim: "Sport",
     seats: 5,
-    trim: 'Sport',
-    exteriorColor: 'Red',
-    interiorColor: 'Gray',
-    listedDate: '2024-12-10',
-    pros: ['Sporty handling', 'Great fuel economy', 'Modern features'],
-    cons: ['Small back seats', 'Firm ride'],
+    pros: ["Sporty handling", "Great fuel economy", "Modern features"],
+    cons: ["Small back seats", "Firm ride"]
   },
   {
     id: 3,
-    image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-    images: [
-      'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-      'https://images.unsplash.com/photo-1563720223185-11003d516935?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-      'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-      'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-    ],
-    make: 'BMW',
-    model: '3 Series',
     year: 2019,
+    make: "BMW",
+    model: "3 Series",
     price: 42000,
     mileage: 38000,
-    deal: 'good',
-    location: 'New York, NY',
-    description: 'Luxury BMW 3 Series with premium features and excellent performance.',
-    sellerName: 'Mike Johnson',
-    transmission: 'Automatic',
-    fuelType: 'Gasoline',
+    location: "New York, NY",
+    image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+      "https://images.unsplash.com/photo-1563720223185-11003d516935?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+      "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+      "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+    ],
+    description: "Luxury BMW 3 Series with premium features and excellent performance.",
+    sellerName: "Mike Johnson",
+    listedDate: "2024-12-05",
+    priceRating: "Great Deal",
+    deal: "good",
+    exteriorColor: "White",
+    interiorColor: "Black",
+    transmission: "Automatic",
+    fuelType: "Gasoline",
+    trim: "330i",
     seats: 5,
-    trim: '330i',
-    exteriorColor: 'White',
-    interiorColor: 'Black',
-    listedDate: '2024-12-05',
-    pros: ['Luxury features', 'Excellent performance', 'Premium interior'],
-    cons: ['Expensive maintenance', 'High insurance costs'],
-  },
+    pros: ["Luxury features", "Excellent performance", "Premium interior"],
+    cons: ["Expensive maintenance", "High insurance costs"]
+  }
 ];
 
 export default function SwipeDeck() {
   const [currentCarIndex, setCurrentCarIndex] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCar, setSelectedCar] = useState<Car | null>(null);
-  const position = useRef(new Animated.ValueXY()).current;
+  const [isGestureActive, setIsGestureActive] = useState(false);
+  const [gestureStartTime, setGestureStartTime] = useState(0);
+  const [gestureStartPosition, setGestureStartPosition] = useState({ x: 0, y: 0 });
   
   const { addToGarage } = useGarageStore();
   const { carQueue, addToQueue, removeFromQueue } = useSwipeQueueStore();
@@ -112,21 +126,27 @@ export default function SwipeDeck() {
   const allCars = [...carQueue, ...sampleCars];
   const currentCar = allCars[currentCarIndex] || sampleCars[0];
 
-  const [isGestureActive, setIsGestureActive] = useState(false);
-  const [gestureStartTime, setGestureStartTime] = useState(0);
-  const [gestureStartPosition, setGestureStartPosition] = useState({ x: 0, y: 0 });
+  // Animation values for the top card
+  const position = useRef(new Animated.ValueXY()).current;
+  const rotation = position.x.interpolate({
+    inputRange: [-SCREEN_WIDTH * 1.5, 0, SCREEN_WIDTH * 1.5],
+    outputRange: ['-30deg', '0deg', '30deg'],
+  });
 
-  useEffect(() => {
-    // Reset to first car when queue changes
-    if (carQueue.length > 0 && currentCarIndex >= allCars.length) {
-      setCurrentCarIndex(0);
-    }
-  }, [carQueue, allCars.length, currentCarIndex]);
+  // Animation values for swipe overlays
+  const likeOpacity = position.x.interpolate({
+    inputRange: [0, SWIPE_THRESHOLD],
+    outputRange: [0, 1],
+  });
+
+  const nopeOpacity = position.x.interpolate({
+    inputRange: [-SWIPE_THRESHOLD, 0],
+    outputRange: [1, 0],
+  });
 
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onMoveShouldSetPanResponder: (_, gesture) => {
-      // Only start pan responder if there's significant horizontal movement
       return Math.abs(gesture.dx) > 10;
     },
     onPanResponderGrant: (_, gesture) => {
@@ -140,41 +160,47 @@ export default function SwipeDeck() {
       }
     },
     onPanResponderRelease: (_, gesture) => {
+      setIsGestureActive(false);
       const gestureDuration = Date.now() - gestureStartTime;
-      const gestureDistance = Math.sqrt(gesture.dx * gesture.dx + gesture.dy * gesture.dy);
-      
-      // If it's a quick, short gesture, treat it as a tap
+      const gestureDistance = Math.sqrt(
+        Math.pow(gesture.x0 - gesture.dx, 2) + Math.pow(gesture.y0 - gesture.dy, 2)
+      );
+
+      // Determine if it's a tap or swipe
       if (gestureDuration < 200 && gestureDistance < 50) {
+        // Tap - open modal
         console.log('Tap detected! Opening modal for car:', currentCar);
-        openCarModal(currentCar);
-        resetPosition();
-        return;
-      }
-      
-      // Otherwise, treat it as a swipe
-      if (gesture.dx > SWIPE_THRESHOLD) {
-        forceSwipe('right');
-      } else if (gesture.dx < -SWIPE_THRESHOLD) {
-        forceSwipe('left');
+        setSelectedCar(currentCar);
+        setModalVisible(true);
+        position.setValue({ x: 0, y: 0 });
       } else {
-        resetPosition();
+        // Swipe
+        const direction = gesture.dx > SWIPE_THRESHOLD ? 'right' : 
+                         gesture.dx < -SWIPE_THRESHOLD ? 'left' : null;
+        
+        if (direction) {
+          forceSwipe(direction);
+        } else {
+          resetPosition();
+        }
       }
-      
-      setIsGestureActive(false);
-    },
-    onPanResponderTerminate: () => {
-      setIsGestureActive(false);
-      resetPosition();
     },
   });
 
   const forceSwipe = (direction: 'right' | 'left') => {
-    const x = direction === 'right' ? SCREEN_WIDTH : -SCREEN_WIDTH;
+    const x = direction === 'right' ? SCREEN_WIDTH * 1.5 : -SCREEN_WIDTH * 1.5;
     Animated.timing(position, {
       toValue: { x, y: 0 },
-      duration: 300,
+      duration: SWIPE_OUT_DURATION,
       useNativeDriver: false,
     }).start(() => onSwipeComplete(direction));
+  };
+
+  const resetPosition = () => {
+    Animated.spring(position, {
+      toValue: { x: 0, y: 0 },
+      useNativeDriver: false,
+    }).start();
   };
 
   const onSwipeComplete = (direction: 'right' | 'left') => {
@@ -198,104 +224,140 @@ export default function SwipeDeck() {
     setCurrentCarIndex((prev) => (prev + 1) % allCars.length);
   };
 
-  const resetPosition = () => {
-    Animated.spring(position, {
-      toValue: { x: 0, y: 0 },
-      useNativeDriver: false,
-    }).start();
+  const renderCard = (car: Car, index: number) => {
+    if (index === 0) {
+      // Top card - interactive
+      return (
+        <Animated.View
+          key={car.id}
+          style={[
+            styles.card,
+            {
+              transform: [
+                { translateX: position.x },
+                { translateY: position.y },
+                { rotate: rotation },
+              ],
+            },
+          ]}
+          {...panResponder.panHandlers}
+        >
+          <Image source={{ uri: car.image }} style={styles.cardImage} />
+          <LinearGradient
+            colors={['transparent', 'rgba(0,0,0,0.8)']}
+            style={styles.gradientOverlay}
+            locations={[0.7, 1]}
+          />
+          
+          {/* Swipe Overlays */}
+          <Animated.View style={[styles.overlay, styles.likeOverlay, { opacity: likeOpacity }]}>
+            <Text style={styles.likeText}>LIKE</Text>
+          </Animated.View>
+          
+          <Animated.View style={[styles.overlay, styles.nopeOverlay, { opacity: nopeOpacity }]}>
+            <Text style={styles.nopeText}>NOPE</Text>
+          </Animated.View>
+          
+          <View style={styles.cardContent}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.carTitle}>
+                {car.year} {car.make} {car.model}
+              </Text>
+              <Text style={styles.carPrice}>
+                ${car.price?.toLocaleString()}
+              </Text>
+            </View>
+            <Text style={styles.carSubtitle}>
+              {car.mileage?.toLocaleString()} mi • {car.location}
+            </Text>
+          </View>
+        </Animated.View>
+      );
+    } else {
+      // Stacked cards - static
+      const scale = 1 - (index * 0.05);
+      const translateY = index * 8;
+      
+      return (
+        <Animated.View
+          key={car.id}
+          style={[
+            styles.card,
+            styles.stackedCard,
+            {
+              transform: [
+                { scale },
+                { translateY },
+              ],
+            },
+          ]}
+        >
+          <Image source={{ uri: car.image }} style={styles.cardImage} />
+          <LinearGradient
+            colors={['transparent', 'rgba(0,0,0,0.8)']}
+            style={styles.gradientOverlay}
+            locations={[0.7, 1]}
+          />
+          <View style={styles.cardContent}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.carTitle}>
+                {car.year} {car.make} {car.model}
+              </Text>
+              <Text style={styles.carPrice}>
+                ${car.price?.toLocaleString()}
+              </Text>
+            </View>
+            <Text style={styles.carSubtitle}>
+              {car.mileage?.toLocaleString()} mi • {car.location}
+            </Text>
+          </View>
+        </Animated.View>
+      );
+    }
   };
 
-  const getCardStyle = () => {
-    const rotate = position.x.interpolate({
-      inputRange: [-SCREEN_WIDTH * 1.5, 0, SCREEN_WIDTH * 1.5],
-      outputRange: ['-8deg', '0deg', '8deg'],
-    });
-
-    const opacity = position.x.interpolate({
-      inputRange: [-SCREEN_WIDTH * 0.5, 0, SCREEN_WIDTH * 0.5],
-      outputRange: [0.8, 1, 0.8],
-    });
-
-    return {
-      ...position.getLayout(),
-      transform: [{ rotate }],
-      opacity,
-    };
-  };
-
-  const openCarModal = (car: Car) => {
-    console.log('Card tapped! Opening modal for car:', car);
-    setSelectedCar(car);
-    setModalVisible(true);
-  };
-
-  const closeModal = () => {
-    setModalVisible(false);
-    setSelectedCar(null);
-  };
-
-  const renderCard = () => {
+  const renderCards = () => {
     if (currentCarIndex >= allCars.length) {
       return (
         <View style={styles.noMoreCards}>
+          <Ionicons name="car-outline" size={64} color="#666" />
           <Text style={styles.noMoreCardsText}>No more cars!</Text>
+          <Text style={styles.noMoreCardsSubtext}>Check back later for new listings</Text>
         </View>
       );
     }
 
-    return (
-      <Animated.View
-        style={[styles.card, getCardStyle()]}
-        {...panResponder.panHandlers}
-      >
-        <Image 
-          source={{ uri: currentCar.image }} 
-          style={styles.cardImage}
-          resizeMode="cover"
-        />
-        <View style={styles.cardContent}>
-          <Text style={styles.carTitle}>{currentCar.year} {currentCar.make} {currentCar.model}</Text>
-          <Text style={styles.carSubtitle}>{currentCar.mileage?.toLocaleString()} mi · {currentCar.location}</Text>
-          <Text style={styles.carPrice}>${currentCar.price?.toLocaleString()}</Text>
-          {currentCar.description && (
-            <Text style={styles.carDescription}>{currentCar.description}</Text>
-          )}
-        </View>
-      </Animated.View>
-    );
+    // Render up to 3 cards in the stack
+    const cardsToRender: React.ReactNode[] = [];
+    for (let i = 0; i < Math.min(3, allCars.length - currentCarIndex); i++) {
+      const car = allCars[currentCarIndex + i];
+      cardsToRender.push(renderCard(car, i));
+    }
+
+    return cardsToRender;
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      
+      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Backlot</Text>
       </View>
-      
+
+      {/* Card Stack */}
       <View style={styles.cardContainer}>
-        {renderCard()}
+        {renderCards()}
+      </View>
 
-        {/* Swipe Instructions */}
-        <View style={styles.swipeInstructions}>
-          <View style={styles.instructionRow}>
-            <View style={styles.instructionItem}>
-              <Ionicons name="close-circle" size={24} color="#ef4444" />
-              <Text style={styles.instructionText}>Swipe Left to Skip</Text>
-            </View>
-            <View style={styles.instructionItem}>
-              <Ionicons name="heart" size={24} color="#10b981" />
-              <Text style={styles.instructionText}>Swipe Right to Save</Text>
-            </View>
-          </View>
+      {/* Action Buttons */}
+      <View style={styles.actionButtons}>
+        <View style={styles.actionButton} onTouchEnd={() => forceSwipe('left')}>
+          <Ionicons name="close" size={32} color="#e74c3c" />
         </View>
-
-        {/* Manual Buttons */}
-        <View style={styles.manualButtons}>
-          <TouchableOpacity style={styles.skipButton} onPress={() => forceSwipe('left')}>
-            <Ionicons name="close" size={32} color="white" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.saveButton} onPress={() => forceSwipe('right')}>
-            <Ionicons name="heart" size={32} color="white" />
-          </TouchableOpacity>
+        <View style={styles.actionButton} onTouchEnd={() => forceSwipe('right')}>
+          <Ionicons name="heart" size={32} color="#27ae60" />
         </View>
       </View>
 
@@ -303,7 +365,10 @@ export default function SwipeDeck() {
       <CarDetailModal
         visible={modalVisible}
         car={selectedCar}
-        onClose={closeModal}
+        onClose={() => {
+          setModalVisible(false);
+          setSelectedCar(null);
+        }}
         isInGarage={false}
       />
     </SafeAreaView>
@@ -313,135 +378,151 @@ export default function SwipeDeck() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#000',
   },
   header: {
-    padding: 16,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    paddingTop: 20,
+    paddingBottom: 10,
+    alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    textAlign: 'center',
+    color: '#fff',
   },
   cardContainer: {
     flex: 1,
-    padding: 16,
+    alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 20,
   },
   card: {
-    backgroundColor: 'white',
-    borderRadius: 12,
+    position: 'absolute',
+    width: SCREEN_WIDTH - 40,
+    height: SCREEN_HEIGHT * 0.7,
+    backgroundColor: '#fff',
+    borderRadius: 24,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-    height: 400,
-    width: '100%',
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  stackedCard: {
+    position: 'absolute',
   },
   cardImage: {
     width: '100%',
-    height: 300,
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  gradientOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '40%',
   },
   cardContent: {
-    padding: 16,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 24,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    marginBottom: 8,
   },
   carTitle: {
-    fontSize: 20,
+    fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  carSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
+    color: '#fff',
+    flex: 1,
   },
   carPrice: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#3b82f6',
-    marginBottom: 8,
   },
-  carDescription: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
+  carSubtitle: {
+    fontSize: 16,
+    color: '#fff',
+    opacity: 0.9,
+  },
+  overlay: {
+    position: 'absolute',
+    padding: 8,
+    borderWidth: 4,
+    borderRadius: 8,
+  },
+  likeOverlay: {
+    top: 40,
+    right: 40,
+    borderColor: 'rgba(39,174,96,0.8)',
+    transform: [{ rotate: '20deg' }],
+  },
+  nopeOverlay: {
+    top: 40,
+    left: 40,
+    borderColor: 'rgba(231,76,60,0.8)',
+    transform: [{ rotate: '-20deg' }],
+  },
+  likeText: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: 'rgba(39,174,96,0.8)',
+  },
+  nopeText: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: 'rgba(231,76,60,0.8)',
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: 40,
+    gap: 40,
+  },
+  actionButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 4,
   },
   noMoreCards: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 20,
+    padding: 40,
   },
   noMoreCardsText: {
-    fontSize: 18,
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  noMoreCardsSubtext: {
+    fontSize: 16,
     color: '#666',
-  },
-  swipeInstructions: {
-    marginTop: 20,
-    marginBottom: 20,
-  },
-  instructionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  instructionItem: {
-    alignItems: 'center',
-  },
-  instructionText: {
-    marginTop: 4,
-    fontSize: 12,
-    color: '#666',
-  },
-  manualButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingHorizontal: 40,
-  },
-  skipButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#ef4444',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  saveButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#10b981',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  cardTouchable: {
-    flex: 1,
+    textAlign: 'center',
   },
 }); 

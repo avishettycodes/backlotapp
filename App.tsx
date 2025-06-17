@@ -43,7 +43,20 @@ export default function App() {
               return <Ionicons name={iconName} size={size} color={color} />;
             },
             tabBarActiveTintColor: '#3b82f6',
-            tabBarInactiveTintColor: 'gray',
+            tabBarInactiveTintColor: 'rgba(255,255,255,0.6)',
+            tabBarStyle: {
+              backgroundColor: 'rgba(0,0,0,0.8)',
+              borderTopWidth: 0,
+              elevation: 0,
+              shadowOpacity: 0,
+              height: 60,
+              paddingBottom: 8,
+              paddingTop: 8,
+            },
+            tabBarLabelStyle: {
+              fontSize: 12,
+              fontWeight: '600',
+            },
             headerShown: false,
           })}
         >
@@ -51,7 +64,7 @@ export default function App() {
           <Tab.Screen name="Garage" component={Garage} />
           <Tab.Screen name="Post" component={Submit} />
         </Tab.Navigator>
-        <StatusBar style="auto" />
+        <StatusBar style="light" />
       </NavigationContainer>
     </SafeAreaProvider>
   );
