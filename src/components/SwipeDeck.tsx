@@ -341,10 +341,14 @@ export default function SwipeDeck() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Backlot</Text>
-      </View>
+      {/* Background Blur Effect */}
+      {currentCar && (
+        <Image
+          source={{ uri: currentCar.image }}
+          style={styles.backgroundImage}
+          blurRadius={20}
+        />
+      )}
 
       {/* Card Stack */}
       <View style={styles.cardContainer}>
@@ -380,37 +384,31 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
   },
-  header: {
-    paddingTop: 20,
-    paddingBottom: 10,
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
+  backgroundImage: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.3,
   },
   cardContainer: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: 20,
   },
   card: {
     position: 'absolute',
-    width: SCREEN_WIDTH - 40,
-    height: SCREEN_HEIGHT * 0.7,
+    width: '90%',
+    height: '75%',
     backgroundColor: '#fff',
-    borderRadius: 24,
+    borderRadius: 20,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 5,
   },
   stackedCard: {
     position: 'absolute',
@@ -485,16 +483,18 @@ const styles = StyleSheet.create({
     color: 'rgba(231,76,60,0.8)',
   },
   actionButtons: {
+    position: 'absolute',
+    bottom: 60,
+    width: '100%',
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: 40,
     gap: 40,
   },
   actionButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
@@ -503,9 +503,9 @@ const styles = StyleSheet.create({
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 3,
   },
   noMoreCards: {
     flex: 1,
