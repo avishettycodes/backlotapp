@@ -232,6 +232,7 @@ export default function SwipeDeck() {
           key={car.id}
           style={[
             styles.card,
+            styles.topCard,
             {
               transform: [
                 { translateX: position.x },
@@ -289,6 +290,7 @@ export default function SwipeDeck() {
                 { scale },
                 { translateY },
               ],
+              zIndex: 3 - index, // Higher index = lower z-index
             },
           ]}
         >
@@ -327,9 +329,12 @@ export default function SwipeDeck() {
       );
     }
 
-    // Render up to 3 cards in the stack
+    // Render up to 3 cards in the stack, starting from the back
     const cardsToRender: React.ReactNode[] = [];
-    for (let i = 0; i < Math.min(3, allCars.length - currentCarIndex); i++) {
+    const maxCards = Math.min(3, allCars.length - currentCarIndex);
+    
+    // Render cards from back to front (reverse order)
+    for (let i = maxCards - 1; i >= 0; i--) {
       const car = allCars[currentCarIndex + i];
       cardsToRender.push(renderCard(car, i));
     }
@@ -412,6 +417,9 @@ const styles = StyleSheet.create({
   },
   stackedCard: {
     position: 'absolute',
+  },
+  topCard: {
+    zIndex: 10,
   },
   cardImage: {
     width: '100%',
