@@ -8,7 +8,7 @@ interface SwipeQueueStore {
   initializeQueue: (cars: Car[]) => void
 }
 
-export const useSwipeQueueStore = create<SwipeQueueStore>((set) => ({
+export const useSwipeQueueStore = create<SwipeQueueStore>()((set) => ({
   carQueue: [],
   addToQueue: (car) => {
     console.log('Store: Adding car to swipe queue:', car)

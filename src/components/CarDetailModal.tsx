@@ -7,220 +7,298 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  FlatList,
   Dimensions,
   ActivityIndicator,
+  Alert,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Car } from '../types/car';
-import FullscreenImageViewer from './FullscreenImageViewer';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface CarDetailModalProps {
   visible: boolean;
-  car: Car;
+  car: Car | null;
   onClose: () => void;
+  isInGarage?: boolean;
+  onRemoveFromGarage?: (carId: number) => void;
 }
 
-export default function CarDetailModal({ visible, car, onClose }: CarDetailModalProps) {
+export default function CarDetailModal({ 
+  visible, 
+  car, 
+  onClose, 
+  isInGarage = false,
+  onRemoveFromGarage 
+}: CarDetailModalProps) {
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [viewerVisible, setViewerVisible] = useState(false);
-  const [viewerIndex, setViewerIndex] = useState(0);
-  const [imagesLoaded, setImagesLoaded] = useState(false);
-
-  const translateY = useSharedValue(300);
-  const opacity = useSharedValue(0);
 
   useEffect(() => {
-    if (visible) {
-      translateY.value = withSpring(0, { damping: 20, stiffness: 200 });
-      opacity.value = withTiming(1, { duration: 300 });
-      
-      // Preload images
-      const images = car.images || [car.image];
-      Promise.all(images.map((uri) => Image.prefetch(uri)))
-        .then(() => setImagesLoaded(true))
-        .catch(() => setImagesLoaded(true));
+    if (visible && car) {
+      // Preload main image
+      Image.prefetch(car.image)
+        .then(() => setImageLoaded(true))
+        .catch(() => setImageLoaded(true));
+      setActiveIndex(0);
     } else {
-      translateY.value = withSpring(300, { damping: 20, stiffness: 200 });
-      opacity.value = withTiming(0, { duration: 300 });
-      setImagesLoaded(false);
+      setImageLoaded(false);
     }
-  }, [visible]);
+  }, [visible, car]);
 
-  const modalStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-    opacity: opacity.value,
-  }));
+  const handleMessageSeller = () => {
+    Alert.alert('Message Seller', 'This feature is coming soon!');
+    onClose();
+  };
 
-  const renderImage = ({ item }: { item: string }) => (
-    <TouchableOpacity
-      onPress={() => {
-        setViewerIndex(activeIndex);
-        setViewerVisible(true);
-      }}
-    >
-      <Image
-        source={{ uri: item }}
-        style={styles.carouselImage}
-        resizeMode="cover"
-      />
-    </TouchableOpacity>
-  );
+  const handleRemoveFromGarage = () => {
+    if (car && onRemoveFromGarage) {
+      onRemoveFromGarage(car.id);
+      onClose();
+    }
+  };
 
-  if (!imagesLoaded) {
+  const getDaysAgo = (listedDate: string) => {
+    const listed = new Date(listedDate);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - listed.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) return '1 day ago';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+    return `${Math.floor(diffDays / 365)} years ago`;
+  };
+
+  if (!car) return null;
+
+  if (!imageLoaded) {
     return (
       <Modal visible={visible} transparent animationType="fade">
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#1CE1A9" />
+          <ActivityIndicator size="large" color="#3b82f6" />
         </View>
       </Modal>
     );
   }
 
+  // Get all images for the car
+  const images = car.images && car.images.length > 0 ? car.images : [car.image];
+
+  const renderImage = ({ item }: { item: string }) => (
+    <Image 
+      source={{ uri: item }} 
+      style={styles.carouselImage}
+      resizeMode="cover"
+    />
+  );
+
   return (
-    <Modal visible={visible} transparent animationType="none">
-      <SafeAreaView style={styles.container}>
-        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-          <Ionicons name="close" size={28} color="#333" />
-        </TouchableOpacity>
-        
-        <Animated.View style={[styles.content, modalStyle]}>
-          <ScrollView contentContainerStyle={styles.scrollContent}>
+    <Modal visible={visible} transparent animationType="slide">
+      <View style={styles.backdrop}>
+        <SafeAreaView style={styles.container}>
+          {/* Close Button */}
+          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+            <Ionicons name="close" size={28} color="#333" />
+          </TouchableOpacity>
+          
+          <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
             {/* Image Carousel */}
-            <View>
+            <View style={styles.imageContainer}>
               <FlatList
-                data={car.images || [car.image]}
+                data={images}
                 renderItem={renderImage}
                 keyExtractor={(_, index) => index.toString()}
                 horizontal
                 pagingEnabled
                 showsHorizontalScrollIndicator={false}
                 style={styles.carousel}
-                onViewableItemsChanged={({ viewableItems }) => {
-                  setActiveIndex(viewableItems[0]?.index ?? 0);
+                onMomentumScrollEnd={(event) => {
+                  const index = Math.round(event.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+                  setActiveIndex(index);
                 }}
-                viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
               />
-              <View style={styles.dotsContainer}>
-                {(car.images || [car.image]).map((_, idx) => (
-                  <View
-                    key={idx}
-                    style={[
-                      styles.dot,
-                      idx === activeIndex ? styles.dotActive : null
-                    ]}
-                  />
-                ))}
-              </View>
+              <View style={styles.imageGradient} />
+              
+              {/* Carousel Dots */}
+              {images.length > 1 && (
+                <View style={styles.dotsContainer}>
+                  {images.map((_, idx) => (
+                    <View
+                      key={idx}
+                      style={[
+                        styles.dot,
+                        idx === activeIndex ? styles.dotActive : null
+                      ]}
+                    />
+                  ))}
+                </View>
+              )}
             </View>
 
-            {/* Title Section */}
-            <View style={styles.titleSection}>
-              <Text style={styles.title}>
-                {car.year} {car.make} {car.model}
-              </Text>
-              <Text style={styles.subtitle}>
-                {car.mileage?.toLocaleString()} mi · {car.location}
-              </Text>
-              <Text style={styles.price}>${car.price?.toLocaleString()}</Text>
-            </View>
-
-            {/* Specs Section */}
-            <View style={styles.specsSection}>
-              <Text style={styles.sectionTitle}>Specifications</Text>
-              <View style={styles.specsGrid}>
-                {car.transmission && (
-                  <View style={styles.specItem}>
-                    <Text style={styles.specLabel}>Transmission</Text>
-                    <Text style={styles.specValue}>{car.transmission}</Text>
-                  </View>
-                )}
-                {car.fuelType && (
-                  <View style={styles.specItem}>
-                    <Text style={styles.specLabel}>Fuel Type</Text>
-                    <Text style={styles.specValue}>{car.fuelType}</Text>
-                  </View>
-                )}
-                {car.seats && (
-                  <View style={styles.specItem}>
-                    <Text style={styles.specLabel}>Seats</Text>
-                    <Text style={styles.specValue}>{car.seats}</Text>
-                  </View>
-                )}
-                {car.trim && (
-                  <View style={styles.specItem}>
-                    <Text style={styles.specLabel}>Trim</Text>
-                    <Text style={styles.specValue}>{car.trim}</Text>
-                  </View>
-                )}
+            <View style={styles.content}>
+              {/* Header Row */}
+              <View style={styles.headerRow}>
+                <View style={styles.headerLeft}>
+                  <Text style={styles.title}>
+                    {car.year} {car.make} {car.model}
+                  </Text>
+                  <Text style={styles.subtitle}>
+                    {car.mileage?.toLocaleString()} miles
+                  </Text>
+                  <Text style={styles.listedDate}>
+                    Listed {getDaysAgo(car.listedDate || '2023-01-01')}
+                  </Text>
+                </View>
+                <View style={styles.headerRight}>
+                  {car.priceRating === 'Great Deal' && (
+                    <View style={styles.dealBadge}>
+                      <Text style={styles.dealBadgeText}>Great Deal</Text>
+                    </View>
+                  )}
+                  <Text style={styles.price}>${car.price?.toLocaleString()}</Text>
+                </View>
               </View>
-            </View>
 
-            {/* Pros & Cons Section */}
-            {(car.pros?.length || car.cons?.length) && (
-              <View style={styles.prosConsSection}>
-                {car.pros?.length > 0 && (
-                  <View style={styles.prosConsColumn}>
-                    <Text style={styles.sectionTitle}>Pros</Text>
-                    {car.pros.map((pro, index) => (
-                      <Text key={index} style={styles.listItem}>
-                        • {pro}
-                      </Text>
-                    ))}
-                  </View>
-                )}
-                {car.cons?.length > 0 && (
-                  <View style={styles.prosConsColumn}>
-                    <Text style={styles.sectionTitle}>Cons</Text>
-                    {car.cons.map((con, index) => (
-                      <Text key={index} style={styles.listItem}>
-                        • {con}
-                      </Text>
-                    ))}
-                  </View>
-                )}
+              {/* Seller Info with Location */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Seller Info</Text>
+                <Text style={styles.sellerName}>{car.sellerName || 'John Doe'}</Text>
+                <View style={styles.locationContainer}>
+                  <Ionicons name="location-outline" size={16} color="#666" />
+                  <Text style={styles.sellerLocation}>{car.location}</Text>
+                </View>
               </View>
-            )}
 
-            {/* Message Seller Button */}
-            <TouchableOpacity
-              style={styles.messageButton}
-              activeOpacity={0.8}
-              onPress={() => {
-                // TODO: Implement message seller functionality
-                console.log('Message seller:', car.id);
-              }}
-            >
-              <Text style={styles.messageButtonText}>Message Seller</Text>
-            </TouchableOpacity>
+              {/* Vehicle Specs */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Vehicle Specs</Text>
+                <View style={styles.specsGrid}>
+                  <View style={styles.specRow}>
+                    <View style={styles.specItem}>
+                      <Text style={styles.specLabel}>Title</Text>
+                      <Text style={styles.specValue}>{car.make} {car.model} {car.year}</Text>
+                    </View>
+                    <View style={styles.specItem}>
+                      <Text style={styles.specLabel}>Transmission</Text>
+                      <Text style={styles.specValue}>{car.transmission || 'Automatic'}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.specRow}>
+                    <View style={styles.specItem}>
+                      <Text style={styles.specLabel}>Listed</Text>
+                      <Text style={styles.specValue}>{car.listedDate || '2023-01-01'}</Text>
+                    </View>
+                    <View style={styles.specItem}>
+                      <Text style={styles.specLabel}>Exterior</Text>
+                      <Text style={styles.specValue}>{car.exteriorColor || 'Blue'}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.specRow}>
+                    <View style={styles.specItem}>
+                      <Text style={styles.specLabel}>Interior</Text>
+                      <Text style={styles.specValue}>{car.interiorColor || 'Black'}</Text>
+                    </View>
+                    <View style={styles.specItem}>
+                      <Text style={styles.specLabel}>Fuel Type</Text>
+                      <Text style={styles.specValue}>{car.fuelType || 'Gasoline'}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.specRow}>
+                    <View style={styles.specItem}>
+                      <Text style={styles.specLabel}>Seats</Text>
+                      <Text style={styles.specValue}>{car.seats || 5} seats</Text>
+                    </View>
+                    <View style={styles.specItem}>
+                      <Text style={styles.specLabel}>Trim</Text>
+                      <Text style={styles.specValue}>{car.trim || 'SE'}</Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+
+              {/* Description */}
+              {car.description && (
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Description</Text>
+                  <Text style={styles.description}>{car.description}</Text>
+                </View>
+              )}
+
+              {/* Pros & Cons */}
+              {((car.pros && car.pros.length > 0) || (car.cons && car.cons.length > 0)) && (
+                <View style={styles.section}>
+                  <View style={styles.prosConsContainer}>
+                    {car.pros && car.pros.length > 0 && (
+                      <View style={styles.prosBox}>
+                        <Text style={styles.prosTitle}>Pros</Text>
+                        {car.pros.map((pro, index) => (
+                          <Text key={index} style={styles.prosItem}>
+                            • {pro}
+                          </Text>
+                        ))}
+                      </View>
+                    )}
+                    {car.cons && car.cons.length > 0 && (
+                      <View style={styles.consBox}>
+                        <Text style={styles.consTitle}>Cons</Text>
+                        {car.cons.map((con, index) => (
+                          <Text key={index} style={styles.consItem}>
+                            • {con}
+                          </Text>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                </View>
+              )}
+
+              {/* Action Buttons - Only show for garage cars */}
+              {isInGarage && (
+                <View style={styles.actionButtons}>
+                  <View style={styles.buttonRow}>
+                    <TouchableOpacity
+                      style={[styles.actionButton, styles.messageButton]}
+                      activeOpacity={0.8}
+                      onPress={handleMessageSeller}
+                    >
+                      <Ionicons name="chatbubble-outline" size={20} color="white" />
+                      <Text style={styles.actionButtonText}>Message Seller</Text>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity
+                      style={[styles.actionButton, styles.removeButton]}
+                      activeOpacity={0.8}
+                      onPress={handleRemoveFromGarage}
+                    >
+                      <Ionicons name="trash-outline" size={20} color="white" />
+                      <Text style={styles.actionButtonText}>Remove from Garage</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            </View>
           </ScrollView>
-        </Animated.View>
-
-        {/* Fullscreen Image Viewer */}
-        <FullscreenImageViewer
-          visible={viewerVisible}
-          images={car.images || [car.image]}
-          startIndex={viewerIndex}
-          onClose={() => setViewerVisible(false)}
-        />
-      </SafeAreaView>
+        </SafeAreaView>
+      </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    marginTop: 100,
   },
   loadingContainer: {
     flex: 1,
@@ -228,19 +306,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  content: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-  },
-  scrollContent: {
-    padding: 16,
-  },
   closeButton: {
     position: 'absolute',
     top: 16,
-    right: 16,
+    right: 20,
     zIndex: 10,
     backgroundColor: 'white',
     borderRadius: 20,
@@ -251,102 +320,216 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  carousel: {
-    height: 250,
-    marginBottom: 8,
+  scrollView: {
+    flex: 1,
   },
-  carouselImage: {
-    width: SCREEN_WIDTH - 32,
+  imageContainer: {
+    position: 'relative',
     height: 250,
-    borderRadius: 16,
+    width: '100%',
   },
-  dotsContainer: {
+  imageGradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 80,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  content: {
+    padding: 20,
+  },
+  headerRow: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    marginHorizontal: 4,
-  },
-  dotActive: {
-    backgroundColor: 'rgba(0,0,0,0.8)',
-  },
-  titleSection: {
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: 24,
   },
+  headerLeft: {
+    flex: 1,
+    marginRight: 16,
+  },
+  headerRight: {
+    alignItems: 'flex-end',
+  },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 24,
+    fontWeight: 'bold',
     color: '#1a1a1a',
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 16,
     color: '#666',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   price: {
     fontSize: 32,
-    fontWeight: '800',
-    color: '#1CE1A9',
+    fontWeight: 'bold',
+    color: '#3b82f6',
+    marginTop: 8,
   },
-  specsSection: {
+  dealBadge: {
+    backgroundColor: '#10b981',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginBottom: 8,
+  },
+  dealBadgeText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  section: {
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '600',
     color: '#1a1a1a',
     marginBottom: 16,
   },
+  sellerName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1a1a1a',
+    marginBottom: 4,
+  },
+  sellerLocation: {
+    fontSize: 16,
+    color: '#666',
+  },
   specsGrid: {
+    gap: 16,
+  },
+  specRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: 16,
   },
   specItem: {
     flex: 1,
-    minWidth: '45%',
   },
   specLabel: {
     fontSize: 14,
+    fontWeight: '500',
     color: '#666',
     marginBottom: 4,
   },
   specValue: {
     fontSize: 16,
-    fontWeight: '600',
     color: '#1a1a1a',
   },
-  prosConsSection: {
-    flexDirection: 'row',
-    gap: 24,
-    marginBottom: 24,
-  },
-  prosConsColumn: {
-    flex: 1,
-  },
-  listItem: {
+  description: {
     fontSize: 16,
-    color: '#1a1a1a',
-    marginBottom: 8,
+    color: '#666',
     lineHeight: 24,
   },
-  messageButton: {
-    backgroundColor: '#3b82f6',
+  prosConsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  prosBox: {
+    flex: 1,
+    backgroundColor: '#E6F9EC',
+    borderWidth: 1,
+    borderColor: '#10b981',
+    borderRadius: 12,
+    padding: 12,
+  },
+  consBox: {
+    flex: 1,
+    backgroundColor: '#FDE6E6',
+    borderWidth: 1,
+    borderColor: '#ef4444',
+    borderRadius: 12,
+    padding: 12,
+  },
+  prosTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#10b981',
+    marginBottom: 8,
+  },
+  consTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#ef4444',
+    marginBottom: 8,
+  },
+  prosItem: {
+    fontSize: 14,
+    color: '#1a1a1a',
+    marginBottom: 4,
+    lineHeight: 20,
+  },
+  consItem: {
+    fontSize: 14,
+    color: '#1a1a1a',
+    marginBottom: 4,
+    lineHeight: 20,
+  },
+  actionButtons: {
+    marginTop: 24,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 16,
     borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 8,
+    gap: 8,
   },
-  messageButtonText: {
+  actionButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  messageButton: {
+    backgroundColor: '#3b82f6',
+  },
+  removeButton: {
+    backgroundColor: '#ef4444',
+  },
+  carousel: {
+    height: 250,
+    width: '100%',
+  },
+  carouselImage: {
+    width: SCREEN_WIDTH,
+    height: 250,
+  },
+  dotsContainer: {
+    position: 'absolute',
+    bottom: 10,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    marginHorizontal: 4,
+  },
+  dotActive: {
+    backgroundColor: 'white',
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  listedDate: {
+    fontSize: 14,
+    color: '#666',
   },
 }); 

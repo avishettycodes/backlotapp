@@ -4,7 +4,7 @@ import { Car } from '../types/car'
 interface GarageStore {
   garageCars: Car[]
   addToGarage: (car: Car) => void
-  removeFromGarage: (carId: number) => void
+  removeFromGarage: (carId: string) => void
 }
 
 export const useGarageStore = create<GarageStore>((set) => ({
@@ -14,7 +14,7 @@ export const useGarageStore = create<GarageStore>((set) => ({
       if (state.garageCars.some((c) => c.id === car.id)) return state
       return { garageCars: [...state.garageCars, car] }
     }),
-  removeFromGarage: (carId: number) =>
+  removeFromGarage: (carId) =>
     set((state) => ({
       garageCars: state.garageCars.filter((car) => car.id !== carId),
     })),
