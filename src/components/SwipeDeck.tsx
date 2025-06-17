@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -119,8 +119,18 @@ export default function SwipeDeck() {
   const [gestureStartTime, setGestureStartTime] = useState(0);
   const [gestureStartPosition, setGestureStartPosition] = useState({ x: 0, y: 0 });
   
-  const { addToGarage } = useGarageStore();
-  const { carQueue, addToQueue, removeFromQueue } = useSwipeQueueStore();
+  const { addToGarage, clearGarage } = useGarageStore();
+  const { carQueue, addToQueue, removeFromQueue, clearQueue } = useSwipeQueueStore();
+
+  // Development mode: Reset stores and car index on component mount
+  useEffect(() => {
+    if (__DEV__) {
+      console.log('🔄 Development mode: Resetting app state');
+      clearGarage();
+      clearQueue();
+      setCurrentCarIndex(0);
+    }
+  }, [clearGarage, clearQueue]);
 
   // Combine sample cars with queue cars, prioritizing queue cars
   const allCars = [...carQueue, ...sampleCars];

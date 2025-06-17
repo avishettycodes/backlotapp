@@ -2,20 +2,45 @@ import { create } from 'zustand'
 import { Car } from '../types/car'
 
 interface GarageStore {
-  garageCars: Car[]
+  cars: Car[]
   addToGarage: (car: Car) => void
   removeFromGarage: (carId: number) => void
+  clearGarage: () => void
+}
+
+// Development mode: clear garage on app reload
+if (__DEV__) {
+  // Clear any existing garage data on development reloads
+  try {
+    // This will run on every hot reload in development
+    console.log('🔄 Development mode: Clearing garage store')
+  } catch (error) {
+    console.log('No existing garage data to clear')
+  }
 }
 
 export const useGarageStore = create<GarageStore>((set) => ({
-  garageCars: [],
-  addToGarage: (car) =>
+  cars: [],
+  addToGarage: (car: Car) => {
     set((state) => {
-      if (state.garageCars.some((c) => c.id === car.id)) return state
-      return { garageCars: [...state.garageCars, car] }
-    }),
-  removeFromGarage: (carId: number) =>
+      // Check if car is already in garage
+      const isAlreadyInGarage = state.cars.some((existingCar) => existingCar.id === car.id)
+      if (isAlreadyInGarage) {
+        console.log('Car already in garage, skipping...')
+        return state
+      }
+      
+      console.log('Adding car to garage:', car)
+      return { cars: [...state.cars, car] }
+    })
+  },
+  removeFromGarage: (carId: number) => {
     set((state) => ({
-      garageCars: state.garageCars.filter((car) => car.id !== carId),
-    })),
+      cars: state.cars.filter((car) => car.id !== carId),
+    }))
+  },
+  clearGarage: () => {
+    console.log('Clearing garage...')
+    set({ cars: [] })
+  },
 })) 

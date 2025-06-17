@@ -25,7 +25,7 @@ const Garage = () => {
   const [modalVisible, setModalVisible] = useState(false)
   
   // Subscribe to both stores
-  const { garageCars, removeFromGarage } = useGarageStore()
+  const { cars: garageCars, removeFromGarage } = useGarageStore()
   const { addToQueue } = useSwipeQueueStore()
 
   // Debug: Log garage state changes
