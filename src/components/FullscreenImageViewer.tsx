@@ -55,8 +55,8 @@ export default function FullscreenImageViewer({
               source={{ uri: images[currentIndex] }}
               style={styles.image}
               resizeMode="contain"
-              onLoad={handleImageLoad}
-            />
+            onLoad={handleImageLoad}
+          />
             {!imagesLoaded && (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#3b82f6" />

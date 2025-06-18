@@ -8,6 +8,7 @@ import {
   Animated,
   PanResponder,
   StatusBar,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -20,6 +21,11 @@ import { useSwipeQueueStore } from '../store/swipeQueueStore';
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
 const SWIPE_OUT_DURATION = 250;
+
+// Responsive scaling factors
+const scale = Math.min(SCREEN_WIDTH / 375, SCREEN_HEIGHT / 812); // Base on iPhone X dimensions
+const scaledFontSize = (size: number) => size * scale;
+const scaledSize = (size: number) => size * scale;
 
 // Sample car data
 const sampleCars: Car[] = [
@@ -118,6 +124,7 @@ export default function SwipeDeck() {
   const [isGestureActive, setIsGestureActive] = useState(false);
   const [gestureStartTime, setGestureStartTime] = useState(0);
   const [gestureStartPosition, setGestureStartPosition] = useState({ x: 0, y: 0 });
+  const [swipeDirection, setSwipeDirection] = useState<'right' | 'left' | null>(null);
   
   const { addToGarage, clearGarage } = useGarageStore();
   const { carQueue, addToQueue, removeFromQueue, clearQueue } = useSwipeQueueStore();
@@ -232,100 +239,7 @@ export default function SwipeDeck() {
     
     position.setValue({ x: 0, y: 0 });
     setCurrentCarIndex((prev) => (prev + 1) % allCars.length);
-  };
-
-  const renderCard = (car: Car, index: number) => {
-    if (index === 0) {
-      // Top card - interactive
-      return (
-        <Animated.View
-          key={car.id}
-          style={[
-            styles.card,
-            styles.topCard,
-            {
-              transform: [
-                { translateX: position.x },
-                { translateY: position.y },
-                { rotate: rotation },
-              ],
-            },
-          ]}
-          {...panResponder.panHandlers}
-        >
-          <Image source={{ uri: car.image }} style={styles.cardImage} />
-          <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.8)']}
-            style={styles.gradientOverlay}
-            locations={[0.7, 1]}
-          />
-          
-          {/* Swipe Overlays */}
-          <Animated.View style={[styles.overlay, styles.likeOverlay, { opacity: likeOpacity }]}>
-            <Text style={styles.likeText}>LIKE</Text>
-          </Animated.View>
-          
-          <Animated.View style={[styles.overlay, styles.nopeOverlay, { opacity: nopeOpacity }]}>
-            <Text style={styles.nopeText}>NOPE</Text>
-          </Animated.View>
-          
-          <View style={styles.cardContent}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.carTitle}>
-                {car.year} {car.make} {car.model}
-              </Text>
-              <Text style={styles.carPrice}>
-                ${car.price?.toLocaleString()}
-              </Text>
-            </View>
-            <Text style={styles.carSubtitle}>
-              {car.mileage?.toLocaleString()} mi • {car.location}
-            </Text>
-          </View>
-        </Animated.View>
-      );
-    } else {
-      // Stacked cards - static
-      const scale = 1 - (index * 0.05);
-      const translateY = index * 8;
-      
-      return (
-        <Animated.View
-          key={car.id}
-          style={[
-            styles.card,
-            styles.stackedCard,
-            {
-              transform: [
-                { scale },
-                { translateY },
-              ],
-              zIndex: 3 - index, // Higher index = lower z-index
-            },
-          ]}
-        >
-          <Image source={{ uri: car.image }} style={styles.cardImage} />
-          <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.8)']}
-            style={styles.gradientOverlay}
-            locations={[0.7, 1]}
-          />
-          <View style={styles.cardContent}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.carTitle}>
-                {car.year} {car.make} {car.model}
-              </Text>
-              <Text style={styles.carPrice}>
-                ${car.price?.toLocaleString()}
-              </Text>
-            </View>
-            <Text style={styles.carSubtitle}>
-              {car.mileage?.toLocaleString()} mi • {car.location}
-            </Text>
-          </View>
-        </Animated.View>
-      );
-    }
+    setSwipeDirection(direction);
   };
 
   const renderCards = () => {
@@ -339,14 +253,75 @@ export default function SwipeDeck() {
       );
     }
 
-    // Render up to 3 cards in the stack, starting from the back
+    const maxCards = 3;
     const cardsToRender: React.ReactNode[] = [];
-    const maxCards = Math.min(3, allCars.length - currentCarIndex);
-    
-    // Render cards from back to front (reverse order)
+
     for (let i = maxCards - 1; i >= 0; i--) {
       const car = allCars[currentCarIndex + i];
-      cardsToRender.push(renderCard(car, i));
+      if (car) {
+        const scale = 1 - (i * 0.05);
+        const translateY = i * 8;
+        const opacity = 1 - (i * 0.3);
+        
+        cardsToRender.push(
+          <Animated.View
+            key={`${car.id}-${i}`}
+            style={[
+              styles.card,
+              styles.stackedCard,
+              i === 0 ? styles.topCard : null,
+              {
+                transform: [
+                  { scale },
+                  { translateY },
+                  // Add swipe animation for top card only
+                  ...(i === 0 ? [
+                    { translateX: position.x },
+                    { translateY: position.y },
+                    { rotate: rotation },
+                  ] : []),
+                ],
+                opacity,
+                zIndex: maxCards - i,
+              },
+            ]}
+            {...(i === 0 ? panResponder.panHandlers : {})}
+          >
+            <Image source={{ uri: car.image }} style={styles.cardImage} />
+            <LinearGradient
+              colors={['transparent', 'rgba(0,0,0,0.8)']}
+              style={styles.gradientOverlay}
+              locations={[0.7, 1]}
+            />
+            
+            {/* Swipe Overlays for top card only */}
+            {i === 0 && (
+              <>
+                <Animated.View style={[styles.overlay, styles.likeOverlay, { opacity: likeOpacity }]}>
+                  <Text style={styles.likeText}>SAVE</Text>
+                </Animated.View>
+                <Animated.View style={[styles.overlay, styles.nopeOverlay, { opacity: nopeOpacity }]}>
+                  <Text style={styles.nopeText}>NOPE</Text>
+                </Animated.View>
+              </>
+            )}
+            
+            <View style={styles.cardContent}>
+              <View style={styles.cardHeader}>
+                <Text style={styles.carTitle}>
+                  {car.year} {car.make} {car.model}
+                </Text>
+                <Text style={styles.carPrice}>
+                  ${car.price?.toLocaleString()}
+                </Text>
+              </View>
+              <Text style={styles.carSubtitle}>
+                {car.mileage?.toLocaleString()} mi • {car.location}
+              </Text>
+            </View>
+          </Animated.View>
+        );
+      }
     }
 
     return cardsToRender;
@@ -361,24 +336,47 @@ export default function SwipeDeck() {
         <Image
           source={{ uri: currentCar.image }}
           style={styles.backgroundImage}
-          blurRadius={20}
+          blurRadius={35}
         />
       )}
 
-      {/* Card Stack */}
+      {/* Dark Overlay for Contrast */}
+      <View style={styles.darkOverlay} />
+
+      {/* Card Stack with proper spacing above tab bar */}
       <View style={styles.cardContainer}>
         {renderCards()}
       </View>
 
       {/* Action Buttons */}
       <View style={styles.actionButtons}>
-        <View style={styles.actionButton} onTouchEnd={() => forceSwipe('left')}>
-          <Ionicons name="close" size={32} color="#e74c3c" />
-        </View>
-        <View style={styles.actionButton} onTouchEnd={() => forceSwipe('right')}>
-          <Ionicons name="heart" size={32} color="#27ae60" />
-        </View>
+        <TouchableOpacity
+          style={styles.actionButton}
+          activeOpacity={0.6}
+          onPress={() => forceSwipe('left')}
+        >
+          <Text style={styles.actionIcon}>✕</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.actionButton}
+          activeOpacity={0.6}
+          onPress={() => forceSwipe('right')}
+        >
+          <Text style={styles.actionIcon}>❤️</Text>
+        </TouchableOpacity>
       </View>
+
+      {/* Swipe Overlays */}
+      {swipeDirection && (
+        <View style={[
+          styles.overlay,
+          swipeDirection === 'right' ? styles.likeOverlay : styles.nopeOverlay
+        ]}>
+          <Text style={swipeDirection === 'right' ? styles.likeText : styles.nopeText}>
+            {swipeDirection === 'right' ? 'SAVE' : 'NOPE'}
+          </Text>
+        </View>
+      )}
 
       {/* Car Detail Modal */}
       <CarDetailModal
@@ -405,25 +403,26 @@ const styles = StyleSheet.create({
   },
   cardContainer: {
     flex: 1,
+    paddingBottom: scaledSize(120), // Responsive space for tab bar
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: scaledSize(20),
   },
   card: {
     position: 'absolute',
-    width: '90%',
-    height: '75%',
+    width: SCREEN_WIDTH * 0.92, // Use screen width percentage
+    height: SCREEN_HEIGHT * 0.7, // Use screen height percentage
     backgroundColor: '#fff',
-    borderRadius: 20,
+    borderRadius: scaledSize(24),
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 5,
+    shadowOpacity: 0.2,
+    shadowRadius: 15,
+    elevation: 8,
   },
   stackedCard: {
     position: 'absolute',
@@ -435,6 +434,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     resizeMode: 'cover',
+    borderRadius: scaledSize(24),
   },
   gradientOverlay: {
     position: 'absolute',
@@ -448,99 +448,109 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 24,
+    padding: scaledSize(24),
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
-    marginBottom: 8,
+    marginBottom: scaledSize(8),
   },
   carTitle: {
-    fontSize: 28,
+    fontSize: scaledFontSize(28),
     fontWeight: 'bold',
     color: '#fff',
     flex: 1,
   },
   carPrice: {
-    fontSize: 24,
+    fontSize: scaledFontSize(24),
     fontWeight: 'bold',
     color: '#3b82f6',
   },
   carSubtitle: {
-    fontSize: 16,
+    fontSize: scaledFontSize(16),
     color: '#fff',
     opacity: 0.9,
   },
   overlay: {
     position: 'absolute',
-    padding: 8,
-    borderWidth: 4,
-    borderRadius: 8,
+    padding: scaledSize(12),
+    borderWidth: scaledSize(6),
+    borderRadius: scaledSize(12),
   },
   likeOverlay: {
-    top: 40,
-    right: 40,
-    borderColor: 'rgba(39,174,96,0.8)',
-    transform: [{ rotate: '20deg' }],
+    top: scaledSize(50),
+    right: scaledSize(50),
+    borderColor: 'rgba(52,199,89,0.9)',
+    transform: [{ rotate: '25deg' }],
   },
   nopeOverlay: {
-    top: 40,
-    left: 40,
-    borderColor: 'rgba(231,76,60,0.8)',
-    transform: [{ rotate: '-20deg' }],
+    top: scaledSize(50),
+    left: scaledSize(50),
+    borderColor: 'rgba(255,76,76,0.9)',
+    transform: [{ rotate: '-25deg' }],
   },
   likeText: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: 'rgba(39,174,96,0.8)',
+    fontSize: scaledFontSize(36),
+    fontWeight: '900',
+    color: 'rgba(52,199,89,0.9)',
+    letterSpacing: 2,
   },
   nopeText: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: 'rgba(231,76,60,0.8)',
+    fontSize: scaledFontSize(36),
+    fontWeight: '900',
+    color: 'rgba(255,76,76,0.9)',
+    letterSpacing: 2,
   },
   actionButtons: {
     position: 'absolute',
-    bottom: 60,
+    bottom: scaledSize(140),
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 40,
+    gap: scaledSize(30),
   },
   actionButton: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: scaledSize(72),
+    height: scaledSize(72),
+    borderRadius: scaledSize(36),
     backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 3,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 3,
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  actionIcon: {
+    fontSize: scaledFontSize(28),
+    fontWeight: 'bold',
   },
   noMoreCards: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 40,
+    padding: scaledSize(40),
   },
   noMoreCardsText: {
-    fontSize: 24,
+    fontSize: scaledFontSize(24),
     fontWeight: 'bold',
     color: '#fff',
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: scaledSize(16),
+    marginBottom: scaledSize(8),
   },
   noMoreCardsSubtext: {
-    fontSize: 16,
+    fontSize: scaledFontSize(16),
     color: '#666',
     textAlign: 'center',
+  },
+  darkOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
 }); 

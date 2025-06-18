@@ -17,8 +17,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import CarDetailModal from './CarDetailModal';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH - 32; // Full width minus padding
+
+// Responsive scaling factors
+const scale = Math.min(SCREEN_WIDTH / 375, SCREEN_HEIGHT / 812);
+const scaledFontSize = (size: number) => size * scale;
+const scaledSize = (size: number) => size * scale;
 
 const Garage = () => {
   const [selectedCar, setSelectedCar] = useState<Car | null>(null)
@@ -53,7 +58,7 @@ const Garage = () => {
     const carToRemove = garageCars.find(car => car.id === carId);
     if (carToRemove) {
       addToQueue(carToRemove);
-    }
+  }
   };
 
   const renderCarCard = ({ item: car }: { item: Car }) => (
@@ -81,14 +86,14 @@ const Garage = () => {
           activeOpacity={0.8}
           onPress={() => Alert.alert('Message Seller', 'This feature is coming soon!')}
         >
-          <Ionicons name="chatbubble-outline" size={24} color="#3b82f6" />
+          <Ionicons name="chatbubble-outline" size={scaledSize(24)} color="#3b82f6" />
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionButton}
           activeOpacity={0.8}
           onPress={() => handleRemoveFromGarage(car.id)}
         >
-          <Ionicons name="trash-outline" size={24} color="#ef4444" />
+          <Ionicons name="trash-outline" size={scaledSize(24)} color="#ef4444" />
         </TouchableOpacity>
       </View>
     </View>
@@ -103,7 +108,7 @@ const Garage = () => {
       <View style={styles.content}>
         {garageCars.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="car-outline" size={64} color="#ccc" />
+            <Ionicons name="car-outline" size={scaledSize(64)} color="#ccc" />
             <Text style={styles.emptyStateText}>Your garage is empty</Text>
             <Text style={styles.emptyStateSubtext}>Swipe right on cars to add them to your garage</Text>
           </View>
@@ -141,19 +146,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
   },
   header: {
-    padding: 16,
+    padding: scaledSize(16),
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: scaledFontSize(24),
     fontWeight: 'bold',
     textAlign: 'center',
   },
   content: {
     flex: 1,
-    padding: 16,
+    padding: scaledSize(16),
   },
   emptyState: {
     flex: 1,
@@ -161,23 +166,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyStateText: {
-    fontSize: 18,
+    fontSize: scaledFontSize(18),
     color: '#666',
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: scaledSize(16),
+    marginBottom: scaledSize(8),
   },
   emptyStateSubtext: {
-    fontSize: 14,
+    fontSize: scaledFontSize(14),
     color: '#999',
     textAlign: 'center',
   },
   cardContainer: {
     width: CARD_WIDTH,
-    marginRight: 16,
+    marginRight: scaledSize(16),
   },
   card: {
     backgroundColor: 'white',
-    borderRadius: 12,
+    borderRadius: scaledSize(12),
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#e0e0e0',
@@ -192,39 +197,39 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '100%',
-    height: 200,
+    height: scaledSize(200),
   },
   cardContent: {
-    padding: 16,
+    padding: scaledSize(16),
   },
   title: {
-    fontSize: 18,
+    fontSize: scaledFontSize(18),
     fontWeight: 'bold',
-    marginBottom: 4,
+    marginBottom: scaledSize(4),
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: scaledFontSize(14),
     color: '#666',
-    marginBottom: 8,
+    marginBottom: scaledSize(8),
   },
   price: {
-    fontSize: 16,
+    fontSize: scaledFontSize(16),
     fontWeight: 'bold',
     color: '#3b82f6',
   },
   actionButtons: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    padding: 16,
+    padding: scaledSize(16),
     backgroundColor: 'white',
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
   },
   actionButton: {
-    padding: 8,
+    padding: scaledSize(8),
   },
   listContent: {
-    paddingHorizontal: 16,
+    paddingHorizontal: scaledSize(16),
   },
 });
 
