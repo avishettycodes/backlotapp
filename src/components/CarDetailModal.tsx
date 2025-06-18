@@ -11,12 +11,18 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  Animated,
-  PanResponder,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Car } from '../types/car';
+import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  useAnimatedGestureHandler,
+  withSpring,
+  runOnJS,
+} from 'react-native-reanimated';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -37,72 +43,43 @@ export default function CarDetailModal({
 }: CarDetailModalProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [scrollOffset, setScrollOffset] = useState(0);
   
-  // Swipe down gesture - enhanced for full screen
-  const translateY = useRef(new Animated.Value(0)).current;
-  const containerScale = translateY.interpolate({
-    inputRange: [0, SCREEN_HEIGHT * 0.5],
-    outputRange: [1, 0.95],
-    extrapolate: 'clamp',
-  });
-  const [isDragging, setIsDragging] = useState(false);
-  const [startY, setStartY] = useState(0);
-  const [currentY, setCurrentY] = useState(0);
+  // Gesture handling state
+  const scrollY = useSharedValue(0);
+  const translateY = useSharedValue(0);
 
-  const handleTouchStart = (event: any) => {
-    // Only handle swipe-to-close when at the top of the scroll view
-    if (scrollOffset <= 0) {
-      setStartY(event.nativeEvent.pageY);
-      setIsDragging(true);
-    }
-  };
-
-  const handleTouchMove = (event: any) => {
-    // Only handle swipe-to-close when at the top and dragging
-    if (isDragging && scrollOffset <= 0) {
-      const newY = event.nativeEvent.pageY;
-      const deltaY = newY - startY;
-      
-      if (deltaY > 0) {
-        setCurrentY(deltaY);
-        translateY.setValue(deltaY * 0.6); // Add resistance
+  const gestureHandler = useAnimatedGestureHandler({
+    onStart: (_, context: any) => {
+      context.startY = translateY.value;
+    },
+    onActive: (event, context: any) => {
+      // Only allow swipe down when at the top of scroll
+      if (scrollY.value <= 0 && event.translationY > 0) {
+        translateY.value = context.startY + event.translationY;
       }
-    }
-  };
-
-  const handleTouchEnd = () => {
-    // Only handle swipe-to-close when at the top
-    if (scrollOffset <= 0) {
-      setIsDragging(false);
-      
-      if (currentY > 100) {
-        // Swipe threshold met - close modal
-        Animated.timing(translateY, {
-          toValue: SCREEN_HEIGHT,
-          duration: 250,
-          useNativeDriver: true,
-        }).start(() => {
-          translateY.setValue(0);
-          onClose();
-        });
+    },
+    onEnd: (event) => {
+      // Check if swipe threshold is met
+      if (scrollY.value <= 0 && event.translationY > 100) {
+        // Close modal
+        runOnJS(onClose)();
       } else {
         // Reset position
-        Animated.spring(translateY, {
-          toValue: 0,
-          useNativeDriver: true,
-        }).start();
+        translateY.value = withSpring(0);
       }
-      
-      setCurrentY(0);
-    }
-  };
+    },
+  });
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateY: translateY.value }],
+    };
+  });
 
   useEffect(() => {
     if (visible && car) {
       // Reset animation values when modal opens
-      translateY.setValue(0);
-      setIsDragging(false);
+      translateY.value = 0;
       
       // Preload main image
       Image.prefetch(car.image)
@@ -112,7 +89,7 @@ export default function CarDetailModal({
     } else {
       setImageLoaded(false);
       // Reset animation values when modal closes
-      translateY.setValue(0);
+      translateY.value = 0;
     }
   }, [visible, car]);
 
@@ -164,226 +141,220 @@ export default function CarDetailModal({
     />
   );
 
-  const swipeIndicatorOpacity = translateY.interpolate({
-    inputRange: [0, 30],
-    outputRange: [0.2, 0.8],
-    extrapolate: 'clamp',
-  });
-
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.backdrop}>
         <Animated.View 
           style={[
             styles.container,
-            {
-              transform: [{ translateY }, { scale: containerScale }],
-            }
+            animatedStyle,
           ]}
         >
           <SafeAreaView style={styles.safeArea}>
-            {/* Fixed header with close button */}
-            <View style={styles.fixedHeader}>
-              <View style={styles.swipeIndicator}>
-                <View style={styles.swipeBar} />
-              </View>
-              
-              {/* Close button - always tappable */}
-              <TouchableOpacity 
-                style={styles.closeButton} 
-                onPress={onClose}
-                testID="close-button"
-              >
-                <Ionicons name="close" size={24} color="white" />
-              </TouchableOpacity>
+            {/* Swipe indicator */}
+            <View style={styles.swipeIndicator}>
+              <View style={styles.swipeBar} />
             </View>
             
-            {/* Scrollable content */}
-            <ScrollView 
-              style={styles.scrollView}
-              contentContainerStyle={styles.scrollContent}
-              showsVerticalScrollIndicator={true}
-              onScroll={(event) => {
-                setScrollOffset(event.nativeEvent.contentOffset.y);
-              }}
-              scrollEventThrottle={16}
-            >
-              {/* Image Carousel */}
-              <View style={styles.imageContainer}>
-                <FlatList
-                  data={images}
-                  renderItem={renderImage}
-                  keyExtractor={(_, index) => index.toString()}
-                  horizontal
-                  pagingEnabled
-                  showsHorizontalScrollIndicator={false}
-                  style={styles.carousel}
-                  onMomentumScrollEnd={(event) => {
-                    const index = Math.round(event.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-                    setActiveIndex(index);
+            {/* Scrollable content with gesture handler */}
+            <PanGestureHandler onGestureEvent={gestureHandler}>
+              <Animated.View style={{ flex: 1 }}>
+                <ScrollView 
+                  style={styles.scrollView}
+                  contentContainerStyle={styles.scrollContent}
+                  showsVerticalScrollIndicator={true}
+                  onScroll={(event) => {
+                    scrollY.value = event.nativeEvent.contentOffset.y;
                   }}
-                />
-                <View style={styles.imageGradient} />
-                
-                {/* Carousel Dots */}
-                {images.length > 1 && (
-                  <View style={styles.dotsContainer}>
-                    {images.map((_, idx) => (
-                      <View
-                        key={idx}
-                        style={[
-                          styles.dot,
-                          idx === activeIndex ? styles.dotActive : null
-                        ]}
-                      />
-                    ))}
-                  </View>
-                )}
-              </View>
-
-              <View style={styles.content}>
-                {/* Header Row */}
-                <View style={styles.headerRow}>
-                  <View style={styles.headerLeft}>
-                    <Text style={styles.title}>
-                      {car.year} {car.make} {car.model}
-                    </Text>
-                    <Text style={styles.subtitle}>
-                      {car.mileage?.toLocaleString()} miles
-                    </Text>
-                    <Text style={styles.listedDate}>
-                      Listed {getDaysAgo(car.listedDate || '2023-01-01')}
-                    </Text>
-                  </View>
-                  <View style={styles.headerRight}>
-                    {car.priceRating === 'Great Deal' && (
-                      <View style={styles.dealBadge}>
-                        <Text style={styles.dealBadgeText}>Great Deal</Text>
+                  scrollEventThrottle={16}
+                >
+                  {/* Image Carousel */}
+                  <View style={styles.imageContainer}>
+                    <FlatList
+                      data={images}
+                      renderItem={renderImage}
+                      keyExtractor={(_, index) => index.toString()}
+                      horizontal
+                      pagingEnabled
+                      showsHorizontalScrollIndicator={false}
+                      style={styles.carousel}
+                      onMomentumScrollEnd={(event) => {
+                        const index = Math.round(event.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+                        setActiveIndex(index);
+                      }}
+                    />
+                    <View style={styles.imageGradient} />
+                    
+                    {/* Carousel Dots */}
+                    {images.length > 1 && (
+                      <View style={styles.dotsContainer}>
+                        {images.map((_, idx) => (
+                          <View
+                            key={idx}
+                            style={[
+                              styles.dot,
+                              idx === activeIndex ? styles.dotActive : null
+                            ]}
+                          />
+                        ))}
                       </View>
                     )}
-                    <Text style={styles.price}>${car.price?.toLocaleString()}</Text>
                   </View>
-                </View>
 
-                {/* Seller Info with Location */}
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Seller Info</Text>
-                  <Text style={styles.sellerName}>{car.sellerName || 'John Doe'}</Text>
-                  <View style={styles.locationContainer}>
-                    <Ionicons name="location-outline" size={16} color="#666" />
-                    <Text style={styles.sellerLocation}>{car.location}</Text>
-                  </View>
-                </View>
-
-                {/* Vehicle Specs */}
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Vehicle Specs</Text>
-                  <View style={styles.specsGrid}>
-                    <View style={styles.specRow}>
-                      <View style={styles.specItem}>
-                        <Text style={styles.specLabel}>Title</Text>
-                        <Text style={styles.specValue}>{car.make} {car.model} {car.year}</Text>
+                  <View style={styles.content}>
+                    {/* Header Row */}
+                    <View style={styles.headerRow}>
+                      <View style={styles.headerLeft}>
+                        <Text style={styles.title}>
+                          {car.year} {car.make} {car.model}
+                        </Text>
+                        <Text style={styles.subtitle}>
+                          {car.mileage?.toLocaleString()} miles
+                        </Text>
+                        <Text style={styles.listedDate}>
+                          Listed {getDaysAgo(car.listedDate || '2023-01-01')}
+                        </Text>
                       </View>
-                      <View style={styles.specItem}>
-                        <Text style={styles.specLabel}>Transmission</Text>
-                        <Text style={styles.specValue}>{car.transmission || 'Automatic'}</Text>
+                      <View style={styles.headerRight}>
+                        {car.priceRating === 'Great Deal' && (
+                          <View style={styles.dealBadge}>
+                            <Text style={styles.dealBadgeText}>Great Deal</Text>
+                          </View>
+                        )}
+                        <Text style={styles.price}>${car.price?.toLocaleString()}</Text>
                       </View>
                     </View>
-                    <View style={styles.specRow}>
-                      <View style={styles.specItem}>
-                        <Text style={styles.specLabel}>Listed</Text>
-                        <Text style={styles.specValue}>{car.listedDate || '2023-01-01'}</Text>
-                      </View>
-                      <View style={styles.specItem}>
-                        <Text style={styles.specLabel}>Exterior</Text>
-                        <Text style={styles.specValue}>{car.exteriorColor || 'Blue'}</Text>
-                      </View>
-                    </View>
-                    <View style={styles.specRow}>
-                      <View style={styles.specItem}>
-                        <Text style={styles.specLabel}>Interior</Text>
-                        <Text style={styles.specValue}>{car.interiorColor || 'Black'}</Text>
-                      </View>
-                      <View style={styles.specItem}>
-                        <Text style={styles.specLabel}>Fuel Type</Text>
-                        <Text style={styles.specValue}>{car.fuelType || 'Gasoline'}</Text>
-                      </View>
-                    </View>
-                    <View style={styles.specRow}>
-                      <View style={styles.specItem}>
-                        <Text style={styles.specLabel}>Seats</Text>
-                        <Text style={styles.specValue}>{car.seats || 5} seats</Text>
-                      </View>
-                      <View style={styles.specItem}>
-                        <Text style={styles.specLabel}>Trim</Text>
-                        <Text style={styles.specValue}>{car.trim || 'SE'}</Text>
-                      </View>
-                    </View>
-                  </View>
-                </View>
 
-                {/* Description */}
-                {car.description && (
-                  <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Description</Text>
-                    <Text style={styles.description}>{car.description}</Text>
-                  </View>
-                )}
+                    {/* Seller Info with Location */}
+                    <View style={styles.section}>
+                      <Text style={styles.sectionTitle}>Seller Info</Text>
+                      <Text style={styles.sellerName}>{car.sellerName || 'John Doe'}</Text>
+                      <View style={styles.locationContainer}>
+                        <Ionicons name="location-outline" size={16} color="#666" />
+                        <Text style={styles.sellerLocation}>{car.location}</Text>
+                      </View>
+                    </View>
 
-                {/* Pros & Cons */}
-                {((car.pros && car.pros.length > 0) || (car.cons && car.cons.length > 0)) && (
-                  <View style={styles.section}>
-                    <View style={styles.prosConsContainer}>
-                      {car.pros && car.pros.length > 0 && (
-                        <View style={styles.prosBox}>
-                          <Text style={styles.prosTitle}>Pros</Text>
-                          {car.pros.map((pro, index) => (
-                            <Text key={index} style={styles.prosItem}>
-                              • {pro}
-                            </Text>
-                          ))}
+                    {/* Vehicle Specs */}
+                    <View style={styles.section}>
+                      <Text style={styles.sectionTitle}>Vehicle Specs</Text>
+                      <View style={styles.specsGrid}>
+                        <View style={styles.specRow}>
+                          <View style={styles.specItem}>
+                            <Text style={styles.specLabel}>Title</Text>
+                            <Text style={styles.specValue}>{car.make} {car.model} {car.year}</Text>
+                          </View>
+                          <View style={styles.specItem}>
+                            <Text style={styles.specLabel}>Transmission</Text>
+                            <Text style={styles.specValue}>{car.transmission || 'Automatic'}</Text>
+                          </View>
                         </View>
-                      )}
-                      {car.cons && car.cons.length > 0 && (
-                        <View style={styles.consBox}>
-                          <Text style={styles.consTitle}>Cons</Text>
-                          {car.cons.map((con, index) => (
-                            <Text key={index} style={styles.consItem}>
-                              • {con}
-                            </Text>
-                          ))}
+                        <View style={styles.specRow}>
+                          <View style={styles.specItem}>
+                            <Text style={styles.specLabel}>Listed</Text>
+                            <Text style={styles.specValue}>{car.listedDate || '2023-01-01'}</Text>
+                          </View>
+                          <View style={styles.specItem}>
+                            <Text style={styles.specLabel}>Exterior</Text>
+                            <Text style={styles.specValue}>{car.exteriorColor || 'Blue'}</Text>
+                          </View>
                         </View>
-                      )}
+                        <View style={styles.specRow}>
+                          <View style={styles.specItem}>
+                            <Text style={styles.specLabel}>Interior</Text>
+                            <Text style={styles.specValue}>{car.interiorColor || 'Black'}</Text>
+                          </View>
+                          <View style={styles.specItem}>
+                            <Text style={styles.specLabel}>Fuel Type</Text>
+                            <Text style={styles.specValue}>{car.fuelType || 'Gasoline'}</Text>
+                          </View>
+                        </View>
+                        <View style={styles.specRow}>
+                          <View style={styles.specItem}>
+                            <Text style={styles.specLabel}>Seats</Text>
+                            <Text style={styles.specValue}>{car.seats || 5} seats</Text>
+                          </View>
+                          <View style={styles.specItem}>
+                            <Text style={styles.specLabel}>Trim</Text>
+                            <Text style={styles.specValue}>{car.trim || 'SE'}</Text>
+                          </View>
+                        </View>
+                      </View>
                     </View>
-                  </View>
-                )}
 
-                {/* Action Buttons - Only show for garage cars */}
-                {isInGarage && (
-                  <View style={styles.actionButtons}>
-                    <View style={styles.buttonRow}>
-                      <TouchableOpacity
-                        style={[styles.actionButton, styles.messageButton]}
-                        activeOpacity={0.8}
-                        onPress={handleMessageSeller}
-                      >
-                        <Ionicons name="chatbubble-outline" size={20} color="white" />
-                        <Text style={styles.actionButtonText}>Message Seller</Text>
-                      </TouchableOpacity>
-                      
-                      <TouchableOpacity
-                        style={[styles.actionButton, styles.removeButton]}
-                        activeOpacity={0.8}
-                        onPress={handleRemoveFromGarage}
-                      >
-                        <Ionicons name="trash-outline" size={20} color="white" />
-                        <Text style={styles.actionButtonText}>Remove from Garage</Text>
-                      </TouchableOpacity>
-                    </View>
+                    {/* Description */}
+                    {car.description && (
+                      <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>Description</Text>
+                        <Text style={styles.description}>{car.description}</Text>
+                      </View>
+                    )}
+
+                    {/* Pros & Cons */}
+                    {((car.pros && car.pros.length > 0) || (car.cons && car.cons.length > 0)) && (
+                      <View style={styles.section}>
+                        <View style={styles.prosConsContainer}>
+                          {car.pros && car.pros.length > 0 && (
+                            <View style={styles.prosBox}>
+                              <Text style={styles.prosTitle}>Pros</Text>
+                              {car.pros.map((pro, index) => (
+                                <Text key={index} style={styles.prosItem}>
+                                  • {pro}
+                                </Text>
+                              ))}
+                            </View>
+                          )}
+                          {car.cons && car.cons.length > 0 && (
+                            <View style={styles.consBox}>
+                              <Text style={styles.consTitle}>Cons</Text>
+                              {car.cons.map((con, index) => (
+                                <Text key={index} style={styles.consItem}>
+                                  • {con}
+                                </Text>
+                              ))}
+                            </View>
+                          )}
+                        </View>
+                      </View>
+                    )}
+
+                    {/* Action Buttons - Only show for garage cars */}
+                    {isInGarage && (
+                      <View style={styles.actionButtons}>
+                        <View style={styles.buttonRow}>
+                          <TouchableOpacity
+                            style={[styles.actionButton, styles.messageButton]}
+                            activeOpacity={0.8}
+                            onPress={handleMessageSeller}
+                          >
+                            <Ionicons name="chatbubble-outline" size={20} color="white" />
+                            <Text style={styles.actionButtonText}>Message Seller</Text>
+                          </TouchableOpacity>
+                          
+                          <TouchableOpacity
+                            style={[styles.actionButton, styles.removeButton]}
+                            activeOpacity={0.8}
+                            onPress={handleRemoveFromGarage}
+                          >
+                            <Ionicons name="trash-outline" size={20} color="white" />
+                            <Text style={styles.actionButtonText}>Remove from Garage</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    )}
                   </View>
-                )}
-              </View>
-            </ScrollView>
+                </ScrollView>
+              </Animated.View>
+            </PanGestureHandler>
+            
+            {/* Floating Close Button - Bottom Right */}
+            <TouchableOpacity
+              onPress={onClose}
+              style={styles.floatingCloseButton}
+              testID="close-button"
+            >
+              <Ionicons name="close" size={24} color="white" />
+            </TouchableOpacity>
           </SafeAreaView>
         </Animated.View>
       </View>
@@ -414,8 +385,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingTop: 80, // Space for fixed header
-    paddingBottom: 100, // Extra padding at bottom for better scrolling
+    paddingBottom: 80, // Space for floating close button
   },
   imageContainer: {
     position: 'relative',
@@ -645,39 +615,13 @@ const styles = StyleSheet.create({
   },
   floatingCloseButton: {
     position: 'absolute',
-    bottom: 20,
-    right: 20,
+    bottom: 16,
+    right: 16,
     zIndex: 10,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    borderRadius: 25,
-    width: 50,
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  fixedHeader: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-    paddingTop: 20,
-    paddingHorizontal: 20,
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 20,
-    right: 20,
-    zIndex: 11,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    borderRadius: 20,
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
