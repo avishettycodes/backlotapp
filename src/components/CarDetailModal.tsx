@@ -182,11 +182,23 @@ export default function CarDetailModal({
           ]}
         >
           <SafeAreaView style={styles.safeArea}>
-            {/* Swipe indicator */}
-            <View style={styles.swipeIndicator}>
-              <View style={styles.swipeBar} />
+            {/* Fixed header with close button */}
+            <View style={styles.fixedHeader}>
+              <View style={styles.swipeIndicator}>
+                <View style={styles.swipeBar} />
+              </View>
+              
+              {/* Close button - always tappable */}
+              <TouchableOpacity 
+                style={styles.closeButton} 
+                onPress={onClose}
+                testID="close-button"
+              >
+                <Ionicons name="close" size={24} color="white" />
+              </TouchableOpacity>
             </View>
             
+            {/* Scrollable content */}
             <ScrollView 
               style={styles.scrollView}
               contentContainerStyle={styles.scrollContent}
@@ -196,52 +208,52 @@ export default function CarDetailModal({
               }}
               scrollEventThrottle={16}
             >
-            {/* Image Carousel */}
+              {/* Image Carousel */}
               <View style={styles.imageContainer}>
-              <FlatList
+                <FlatList
                   data={images}
-                renderItem={renderImage}
-                keyExtractor={(_, index) => index.toString()}
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={false}
-                style={styles.carousel}
+                  renderItem={renderImage}
+                  keyExtractor={(_, index) => index.toString()}
+                  horizontal
+                  pagingEnabled
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.carousel}
                   onMomentumScrollEnd={(event) => {
                     const index = Math.round(event.nativeEvent.contentOffset.x / SCREEN_WIDTH);
                     setActiveIndex(index);
-                }}
-              />
+                  }}
+                />
                 <View style={styles.imageGradient} />
                 
                 {/* Carousel Dots */}
                 {images.length > 1 && (
-              <View style={styles.dotsContainer}>
+                  <View style={styles.dotsContainer}>
                     {images.map((_, idx) => (
-                  <View
-                    key={idx}
-                    style={[
-                      styles.dot,
-                      idx === activeIndex ? styles.dotActive : null
-                    ]}
-                  />
-                ))}
-              </View>
+                      <View
+                        key={idx}
+                        style={[
+                          styles.dot,
+                          idx === activeIndex ? styles.dotActive : null
+                        ]}
+                      />
+                    ))}
+                  </View>
                 )}
-            </View>
+              </View>
 
               <View style={styles.content}>
                 {/* Header Row */}
                 <View style={styles.headerRow}>
                   <View style={styles.headerLeft}>
-              <Text style={styles.title}>
-                {car.year} {car.make} {car.model}
-              </Text>
-              <Text style={styles.subtitle}>
+                    <Text style={styles.title}>
+                      {car.year} {car.make} {car.model}
+                    </Text>
+                    <Text style={styles.subtitle}>
                       {car.mileage?.toLocaleString()} miles
                     </Text>
                     <Text style={styles.listedDate}>
                       Listed {getDaysAgo(car.listedDate || '2023-01-01')}
-              </Text>
+                    </Text>
                   </View>
                   <View style={styles.headerRight}>
                     {car.priceRating === 'Great Deal' && (
@@ -249,7 +261,7 @@ export default function CarDetailModal({
                         <Text style={styles.dealBadgeText}>Great Deal</Text>
                       </View>
                     )}
-              <Text style={styles.price}>${car.price?.toLocaleString()}</Text>
+                    <Text style={styles.price}>${car.price?.toLocaleString()}</Text>
                   </View>
                 </View>
 
@@ -261,19 +273,19 @@ export default function CarDetailModal({
                     <Ionicons name="location-outline" size={16} color="#666" />
                     <Text style={styles.sellerLocation}>{car.location}</Text>
                   </View>
-            </View>
+                </View>
 
                 {/* Vehicle Specs */}
                 <View style={styles.section}>
                   <Text style={styles.sectionTitle}>Vehicle Specs</Text>
-              <View style={styles.specsGrid}>
+                  <View style={styles.specsGrid}>
                     <View style={styles.specRow}>
                       <View style={styles.specItem}>
                         <Text style={styles.specLabel}>Title</Text>
                         <Text style={styles.specValue}>{car.make} {car.model} {car.year}</Text>
                       </View>
-                  <View style={styles.specItem}>
-                    <Text style={styles.specLabel}>Transmission</Text>
+                      <View style={styles.specItem}>
+                        <Text style={styles.specLabel}>Transmission</Text>
                         <Text style={styles.specValue}>{car.transmission || 'Automatic'}</Text>
                       </View>
                     </View>
@@ -291,15 +303,15 @@ export default function CarDetailModal({
                       <View style={styles.specItem}>
                         <Text style={styles.specLabel}>Interior</Text>
                         <Text style={styles.specValue}>{car.interiorColor || 'Black'}</Text>
-                  </View>
-                  <View style={styles.specItem}>
-                    <Text style={styles.specLabel}>Fuel Type</Text>
+                      </View>
+                      <View style={styles.specItem}>
+                        <Text style={styles.specLabel}>Fuel Type</Text>
                         <Text style={styles.specValue}>{car.fuelType || 'Gasoline'}</Text>
                       </View>
-                  </View>
+                    </View>
                     <View style={styles.specRow}>
-                  <View style={styles.specItem}>
-                    <Text style={styles.specLabel}>Seats</Text>
+                      <View style={styles.specItem}>
+                        <Text style={styles.specLabel}>Seats</Text>
                         <Text style={styles.specValue}>{car.seats || 5} seats</Text>
                       </View>
                       <View style={styles.specItem}>
@@ -325,26 +337,26 @@ export default function CarDetailModal({
                       {car.pros && car.pros.length > 0 && (
                         <View style={styles.prosBox}>
                           <Text style={styles.prosTitle}>Pros</Text>
-                    {car.pros.map((pro, index) => (
+                          {car.pros.map((pro, index) => (
                             <Text key={index} style={styles.prosItem}>
-                        • {pro}
-                      </Text>
-                    ))}
-                  </View>
-                )}
+                              • {pro}
+                            </Text>
+                          ))}
+                        </View>
+                      )}
                       {car.cons && car.cons.length > 0 && (
                         <View style={styles.consBox}>
                           <Text style={styles.consTitle}>Cons</Text>
-                    {car.cons.map((con, index) => (
+                          {car.cons.map((con, index) => (
                             <Text key={index} style={styles.consItem}>
-                        • {con}
-                      </Text>
-                    ))}
+                              • {con}
+                            </Text>
+                          ))}
+                        </View>
+                      )}
+                    </View>
                   </View>
                 )}
-                    </View>
-              </View>
-            )}
 
                 {/* Action Buttons - Only show for garage cars */}
                 {isInGarage && (
@@ -359,9 +371,9 @@ export default function CarDetailModal({
                         <Text style={styles.actionButtonText}>Message Seller</Text>
                       </TouchableOpacity>
                       
-            <TouchableOpacity
+                      <TouchableOpacity
                         style={[styles.actionButton, styles.removeButton]}
-              activeOpacity={0.8}
+                        activeOpacity={0.8}
                         onPress={handleRemoveFromGarage}
                       >
                         <Ionicons name="trash-outline" size={20} color="white" />
@@ -372,15 +384,6 @@ export default function CarDetailModal({
                 )}
               </View>
             </ScrollView>
-            
-            {/* Floating Close Button - Bottom Right */}
-            <TouchableOpacity 
-              style={styles.floatingCloseButton} 
-              onPress={onClose}
-              testID="close-button"
-            >
-              <Ionicons name="close" size={24} color="white" />
-            </TouchableOpacity>
           </SafeAreaView>
         </Animated.View>
       </View>
@@ -411,7 +414,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 100,
+    paddingTop: 80, // Space for fixed header
+    paddingBottom: 100, // Extra padding at bottom for better scrolling
   },
   imageContainer: {
     position: 'relative',
@@ -648,6 +652,32 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     width: 50,
     height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  fixedHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    paddingTop: 20,
+    paddingHorizontal: 20,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    zIndex: 11,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',

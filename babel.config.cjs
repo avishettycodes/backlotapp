@@ -1,10 +1,8 @@
 module.exports = {
-  presets: [
-    ['@babel/preset-env', { targets: { node: 'current' } }],
-    ['@babel/preset-react', { runtime: 'automatic' }],
-    '@babel/preset-typescript',
-  ],
+  presets: ['babel-preset-expo'],
   plugins: [
-    ['@babel/plugin-transform-runtime', { regenerator: true }],
+    'react-native-reanimated/plugin',
+    '@babel/plugin-proposal-optional-chaining',
+    '@babel/plugin-proposal-nullish-coalescing-operator',
   ],
 }; 
