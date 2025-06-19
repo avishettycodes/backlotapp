@@ -349,9 +349,10 @@ const styles = StyleSheet.create({
   },
   swiperContainer: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'center',
     paddingHorizontal: scaledSize(20),
+    paddingTop: scaledSize(80),
   },
   card: {
     width: SCREEN_WIDTH * 0.92,
