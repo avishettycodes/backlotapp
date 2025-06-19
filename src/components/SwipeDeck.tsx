@@ -215,8 +215,8 @@ export default function SwipeDeck() {
         <Ionicons name="settings-outline" size={scaledSize(24)} color={colors.textInverse} />
       </TouchableOpacity>
 
-      {/* Background Blur Effect */}
-      {allCars.length > 0 && (
+      {/* Background Blur Effect - Only show in dark mode */}
+      {isDark && allCars.length > 0 && (
         <Image
           source={{ uri: allCars[0].image }}
           style={styles.backgroundImage}
@@ -224,8 +224,10 @@ export default function SwipeDeck() {
         />
       )}
 
-      {/* Dark Overlay for Contrast */}
-      <View style={[styles.darkOverlay, { backgroundColor: colors.backdrop }]} />
+      {/* Dark Overlay for Contrast - Only show in dark mode */}
+      {isDark && (
+        <View style={[styles.darkOverlay, { backgroundColor: colors.backdrop }]} />
+      )}
 
       {/* Swiper Component */}
       <View style={styles.swiperContainer}>
