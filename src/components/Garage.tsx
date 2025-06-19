@@ -107,14 +107,16 @@ const Garage = () => {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]} edges={['top']}>
       <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <Text style={[styles.headerTitle, { color: colors.text }]}>My Garage</Text>
-        <TouchableOpacity
-          style={styles.settingsButton}
-          onPress={() => setSettingsVisible(true)}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="settings-outline" size={scaledSize(24)} color={colors.primary} />
-        </TouchableOpacity>
       </View>
+      
+      {/* Settings Button */}
+      <TouchableOpacity
+        style={[styles.settingsButton, { backgroundColor: colors.primary }]}
+        onPress={() => setSettingsVisible(true)}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="settings-outline" size={scaledSize(24)} color={colors.textInverse} />
+      </TouchableOpacity>
       
       <View style={styles.content}>
         {garageCars.length === 0 ? (
@@ -175,7 +177,23 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   settingsButton: {
-    padding: scaledSize(4),
+    position: 'absolute',
+    top: scaledSize(60),
+    right: scaledSize(20),
+    width: scaledSize(44),
+    height: scaledSize(44),
+    borderRadius: scaledSize(22),
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   content: {
     flex: 1,

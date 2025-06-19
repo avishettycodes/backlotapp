@@ -208,7 +208,7 @@ export default function SwipeDeck() {
       
       {/* Settings Button */}
       <TouchableOpacity
-        style={[styles.settingsButton, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.3)' : colors.backdrop }]}
+        style={[styles.settingsButton, { backgroundColor: colors.primary }]}
         onPress={() => setSettingsVisible(true)}
         activeOpacity={0.8}
       >

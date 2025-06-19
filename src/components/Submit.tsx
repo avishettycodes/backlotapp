@@ -13,14 +13,16 @@ export default function Submit() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]} edges={['top']}>
       <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <Text style={[styles.headerTitle, { color: colors.text }]}>Submit a Car</Text>
-        <TouchableOpacity
-          style={styles.settingsButton}
-          onPress={() => setSettingsVisible(true)}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="settings-outline" size={24} color={colors.primary} />
-        </TouchableOpacity>
       </View>
+      
+      {/* Settings Button */}
+      <TouchableOpacity
+        style={[styles.settingsButton, { backgroundColor: colors.primary }]}
+        onPress={() => setSettingsVisible(true)}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="settings-outline" size={24} color={colors.textInverse} />
+      </TouchableOpacity>
       
       <View style={styles.content}>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Coming soon!</Text>
@@ -53,7 +55,23 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   settingsButton: {
-    padding: 4,
+    position: 'absolute',
+    top: 60,
+    right: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   content: {
     flex: 1,
