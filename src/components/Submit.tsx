@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import SettingsModal from './SettingsModal';
 import { useTheme } from '../context/ThemeContext';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const scale = Math.min(SCREEN_WIDTH, SCREEN_HEIGHT) / 375; // Base scale on iPhone 8
+const scaledFontSize = (size: number) => size * scale;
+const scaledSize = (size: number) => size * scale;
 
 export default function Submit() {
   const [settingsVisible, setSettingsVisible] = useState(false);
@@ -21,7 +26,7 @@ export default function Submit() {
         onPress={() => setSettingsVisible(true)}
         activeOpacity={0.8}
       >
-        <Ionicons name="settings-outline" size={24} color={colors.textInverse} />
+        <Ionicons name="settings-outline" size={scaledSize(24)} color={colors.textInverse} />
       </TouchableOpacity>
       
       <View style={styles.content}>
@@ -45,22 +50,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    padding: scaledSize(16),
     borderBottomWidth: 1,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: scaledFontSize(24),
     fontWeight: 'bold',
     flex: 1,
     textAlign: 'center',
   },
   settingsButton: {
     position: 'absolute',
-    top: 60,
-    right: 20,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    top: scaledSize(80),
+    right: scaledSize(20),
+    width: scaledSize(44),
+    height: scaledSize(44),
+    borderRadius: scaledSize(22),
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1000,
@@ -77,10 +82,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: scaledSize(20),
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: scaledFontSize(16),
     textAlign: 'center',
   },
 }); 
