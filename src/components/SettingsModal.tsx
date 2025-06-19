@@ -134,7 +134,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
     );
   };
 
-  const handleThemeSelection = (selectedTheme: 'light' | 'dark' | 'auto') => {
+  const handleThemeSelection = (selectedTheme: 'light' | 'dark') => {
     setTheme(selectedTheme);
     setShowThemeModal(false);
     console.log('Theme changed to:', selectedTheme);
@@ -144,8 +144,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
     switch (currentTheme) {
       case 'light': return 'Light Mode';
       case 'dark': return 'Dark Mode';
-      case 'auto': return 'Auto';
-      default: return 'Auto';
+      default: return 'Light Mode';
     }
   };
 
@@ -424,34 +423,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
                   <Text style={[styles.themeOptionSubtitle, { color: colors.textSecondary }]}>Always use dark theme</Text>
                 </View>
                 {theme === 'dark' && (
-                  <Ionicons name="checkmark" size={scaledSize(20)} color={colors.primary} />
-                )}
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.themeOption,
-                  { backgroundColor: colors.surface, borderColor: colors.border },
-                  theme === 'auto' && { borderColor: colors.primary, backgroundColor: colors.primaryLight }
-                ]}
-                onPress={() => handleThemeSelection('auto')}
-              >
-                <Ionicons 
-                  name="settings-outline" 
-                  size={scaledSize(24)} 
-                  color={theme === 'auto' ? colors.primary : colors.textSecondary} 
-                />
-                <View style={styles.themeOptionText}>
-                  <Text style={[
-                    styles.themeOptionTitle,
-                    { color: colors.text },
-                    theme === 'auto' && { color: colors.primary }
-                  ]}>
-                    Auto
-                  </Text>
-                  <Text style={[styles.themeOptionSubtitle, { color: colors.textSecondary }]}>Follow device setting</Text>
-                </View>
-                {theme === 'auto' && (
                   <Ionicons name="checkmark" size={scaledSize(20)} color={colors.primary} />
                 )}
               </TouchableOpacity>

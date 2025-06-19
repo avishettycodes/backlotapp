@@ -2,7 +2,7 @@ export const Colors = {
   light: {
     // Background colors
     background: '#ffffff',
-    surface: '#f8fafc',
+    surface: '#ffffff',
     card: '#ffffff',
     modal: '#ffffff',
     
@@ -30,7 +30,7 @@ export const Colors = {
     overlay: 'rgba(0, 0, 0, 0.5)',
     backdrop: 'rgba(0, 0, 0, 0.6)',
     
-    // Tab bar colors - Always black in light mode
+    // Tab bar colors - Always black
     tabBar: 'rgba(0, 0, 0, 0.9)',
     tabBarText: 'rgba(255, 255, 255, 0.6)',
     tabBarActive: '#3b82f6',
@@ -77,7 +77,7 @@ export const Colors = {
     overlay: 'rgba(0, 0, 0, 0.7)',
     backdrop: 'rgba(0, 0, 0, 0.8)',
     
-    // Tab bar colors - Always black in dark mode too
+    // Tab bar colors - Always black
     tabBar: 'rgba(0, 0, 0, 0.9)',
     tabBarText: 'rgba(255, 255, 255, 0.6)',
     tabBarActive: '#60a5fa',
@@ -95,11 +95,8 @@ export const Colors = {
   },
 };
 
-export type Theme = 'light' | 'dark' | 'auto';
+export type Theme = 'light' | 'dark';
 
-export const getThemeColors = (theme: Theme, systemTheme?: 'light' | 'dark') => {
-  if (theme === 'auto') {
-    return Colors[systemTheme || 'light'];
-  }
+export const getThemeColors = (theme: Theme) => {
   return Colors[theme];
 }; 
