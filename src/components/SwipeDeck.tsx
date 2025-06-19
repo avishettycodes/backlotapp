@@ -13,6 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Swiper from 'react-native-deck-swiper';
 import CarDetailModal from './CarDetailModal';
+import SettingsModal from './SettingsModal';
 import { Car } from '../types/car';
 import { useGarageStore } from '../store/garageStore';
 import { useSwipeQueueStore } from '../store/swipeQueueStore';
@@ -117,6 +118,7 @@ const sampleCars: Car[] = [
 export default function SwipeDeck() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCar, setSelectedCar] = useState<Car | null>(null);
+  const [settingsVisible, setSettingsVisible] = useState(false);
   
   const { addToGarage, clearGarage } = useGarageStore();
   const { carQueue, addToQueue, removeFromQueue, clearQueue } = useSwipeQueueStore();
@@ -202,6 +204,15 @@ export default function SwipeDeck() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       
+      {/* Settings Button */}
+      <TouchableOpacity
+        style={styles.settingsButton}
+        onPress={() => setSettingsVisible(true)}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="settings-outline" size={scaledSize(24)} color="#fff" />
+      </TouchableOpacity>
+
       {/* Background Blur Effect */}
       {allCars.length > 0 && (
         <Image
@@ -295,6 +306,12 @@ export default function SwipeDeck() {
         }}
         isInGarage={false}
       />
+
+      {/* Settings Modal */}
+      <SettingsModal
+        visible={settingsVisible}
+        onClose={() => setSettingsVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -303,6 +320,26 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000',
+  },
+  settingsButton: {
+    position: 'absolute',
+    top: scaledSize(60),
+    right: scaledSize(20),
+    width: scaledSize(44),
+    height: scaledSize(44),
+    borderRadius: scaledSize(22),
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   backgroundImage: {
     ...StyleSheet.absoluteFillObject,

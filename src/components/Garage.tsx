@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import CarDetailModal from './CarDetailModal';
+import SettingsModal from './SettingsModal';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH - 32; // Full width minus padding
@@ -28,10 +29,11 @@ const scaledSize = (size: number) => size * scale;
 const Garage = () => {
   const [selectedCar, setSelectedCar] = useState<Car | null>(null)
   const [modalVisible, setModalVisible] = useState(false)
+  const [settingsVisible, setSettingsVisible] = useState(false)
   
   // Subscribe to both stores
-  const { cars: garageCars, removeFromGarage } = useGarageStore()
-  const { addToQueue } = useSwipeQueueStore()
+  const { cars: garageCars, removeFromGarage, clearGarage } = useGarageStore()
+  const { addToQueue, clearQueue } = useSwipeQueueStore()
 
   // Debug: Log garage state changes
   useEffect(() => {
@@ -103,6 +105,13 @@ const Garage = () => {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>My Garage</Text>
+        <TouchableOpacity
+          style={styles.settingsButton}
+          onPress={() => setSettingsVisible(true)}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="settings-outline" size={scaledSize(24)} color="#3b82f6" />
+        </TouchableOpacity>
       </View>
       
       <View style={styles.content}>
@@ -136,6 +145,12 @@ const Garage = () => {
         isInGarage={true}
         onRemoveFromGarage={handleRemoveFromGarage}
       />
+
+      {/* Settings Modal */}
+      <SettingsModal
+        visible={settingsVisible}
+        onClose={() => setSettingsVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -146,6 +161,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: scaledSize(16),
     backgroundColor: 'white',
     borderBottomWidth: 1,
@@ -154,7 +172,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: scaledFontSize(24),
     fontWeight: 'bold',
+    flex: 1,
     textAlign: 'center',
+  },
+  settingsButton: {
+    padding: scaledSize(4),
   },
   content: {
     flex: 1,
