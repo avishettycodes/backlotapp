@@ -89,7 +89,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
   });
 
   const [appearance, setAppearance] = useState({
-    theme: 'system',
+    theme: 'auto',
   });
 
   const [location, setLocation] = useState({
@@ -100,6 +100,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
     currency: 'USD',
     units: 'miles',
   });
+
+  const [showThemeModal, setShowThemeModal] = useState(false);
 
   const handleSignOut = () => {
     Alert.alert(
@@ -127,6 +129,22 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
         }},
       ]
     );
+  };
+
+  const handleThemeSelection = (theme: 'light' | 'dark' | 'auto') => {
+    setAppearance(prev => ({ ...prev, theme }));
+    setShowThemeModal(false);
+    // Here you would typically update the app's theme
+    console.log('Theme changed to:', theme);
+  };
+
+  const getThemeDisplayValue = (theme: string) => {
+    switch (theme) {
+      case 'light': return 'Light Mode';
+      case 'dark': return 'Dark Mode';
+      case 'auto': return 'Auto';
+      default: return 'Auto';
+    }
   };
 
   const renderSection = (title: string, children: React.ReactNode) => (
@@ -231,10 +249,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
             <>
               <SettingItem
                 title="Theme"
-                subtitle="System default"
+                subtitle="Follows device setting"
                 icon="color-palette-outline"
-                showValue={appearance.theme === 'system' ? 'System' : appearance.theme === 'dark' ? 'Dark' : 'Light'}
-                onPress={() => Alert.alert('Theme', 'Theme settings coming soon!')}
+                showValue={getThemeDisplayValue(appearance.theme)}
+                onPress={() => setShowThemeModal(true)}
               />
             </>
           )}
@@ -335,6 +353,103 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
             </>
           )}
         </ScrollView>
+
+        {/* Theme Selection Modal */}
+        <Modal
+          visible={showThemeModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowThemeModal(false)}
+        >
+          <View style={styles.themeModalOverlay}>
+            <View style={styles.themeModalContent}>
+              <View style={styles.themeModalHeader}>
+                <Text style={styles.themeModalTitle}>Choose Theme</Text>
+                <TouchableOpacity onPress={() => setShowThemeModal(false)}>
+                  <Ionicons name="close" size={scaledSize(24)} color="#000" />
+                </TouchableOpacity>
+              </View>
+              
+              <TouchableOpacity
+                style={[
+                  styles.themeOption,
+                  appearance.theme === 'light' && styles.themeOptionSelected
+                ]}
+                onPress={() => handleThemeSelection('light')}
+              >
+                <Ionicons 
+                  name="sunny-outline" 
+                  size={scaledSize(24)} 
+                  color={appearance.theme === 'light' ? '#3b82f6' : '#6b7280'} 
+                />
+                <View style={styles.themeOptionText}>
+                  <Text style={[
+                    styles.themeOptionTitle,
+                    appearance.theme === 'light' && styles.themeOptionTitleSelected
+                  ]}>
+                    Light Mode
+                  </Text>
+                  <Text style={styles.themeOptionSubtitle}>Always use light theme</Text>
+                </View>
+                {appearance.theme === 'light' && (
+                  <Ionicons name="checkmark" size={scaledSize(20)} color="#3b82f6" />
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.themeOption,
+                  appearance.theme === 'dark' && styles.themeOptionSelected
+                ]}
+                onPress={() => handleThemeSelection('dark')}
+              >
+                <Ionicons 
+                  name="moon-outline" 
+                  size={scaledSize(24)} 
+                  color={appearance.theme === 'dark' ? '#3b82f6' : '#6b7280'} 
+                />
+                <View style={styles.themeOptionText}>
+                  <Text style={[
+                    styles.themeOptionTitle,
+                    appearance.theme === 'dark' && styles.themeOptionTitleSelected
+                  ]}>
+                    Dark Mode
+                  </Text>
+                  <Text style={styles.themeOptionSubtitle}>Always use dark theme</Text>
+                </View>
+                {appearance.theme === 'dark' && (
+                  <Ionicons name="checkmark" size={scaledSize(20)} color="#3b82f6" />
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.themeOption,
+                  appearance.theme === 'auto' && styles.themeOptionSelected
+                ]}
+                onPress={() => handleThemeSelection('auto')}
+              >
+                <Ionicons 
+                  name="settings-outline" 
+                  size={scaledSize(24)} 
+                  color={appearance.theme === 'auto' ? '#3b82f6' : '#6b7280'} 
+                />
+                <View style={styles.themeOptionText}>
+                  <Text style={[
+                    styles.themeOptionTitle,
+                    appearance.theme === 'auto' && styles.themeOptionTitleSelected
+                  ]}>
+                    Auto
+                  </Text>
+                  <Text style={styles.themeOptionSubtitle}>Follow device setting</Text>
+                </View>
+                {appearance.theme === 'auto' && (
+                  <Ionicons name="checkmark" size={scaledSize(20)} color="#3b82f6" />
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </Modal>
   );
@@ -429,6 +544,61 @@ const styles = StyleSheet.create({
     fontSize: scaledFontSize(14),
     color: '#6b7280',
     marginRight: scaledSize(8),
+  },
+  themeModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  themeModalContent: {
+    backgroundColor: 'white',
+    padding: scaledSize(20),
+    borderRadius: scaledSize(12),
+    width: '85%',
+    maxWidth: scaledSize(320),
+  },
+  themeModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: scaledSize(20),
+  },
+  themeModalTitle: {
+    fontSize: scaledFontSize(18),
+    fontWeight: 'bold',
+    color: '#1f2937',
+  },
+  themeOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: scaledSize(16),
+    marginBottom: scaledSize(12),
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+    borderRadius: scaledSize(12),
+    backgroundColor: '#f9fafb',
+  },
+  themeOptionSelected: {
+    borderColor: '#3b82f6',
+    backgroundColor: '#eff6ff',
+  },
+  themeOptionText: {
+    flex: 1,
+    marginLeft: scaledSize(12),
+  },
+  themeOptionTitle: {
+    fontSize: scaledFontSize(16),
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: scaledSize(2),
+  },
+  themeOptionTitleSelected: {
+    color: '#3b82f6',
+  },
+  themeOptionSubtitle: {
+    fontSize: scaledFontSize(14),
+    color: '#6b7280',
   },
 });
 
