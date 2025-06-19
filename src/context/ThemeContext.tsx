@@ -32,13 +32,13 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const isDark = effectiveTheme === 'dark';
   const colors = getThemeColors(theme, systemColorScheme as 'light' | 'dark');
 
-  // Update theme when system theme changes (for auto mode)
+  // Debug logging
   useEffect(() => {
-    if (theme === 'auto') {
-      // Force re-render when system theme changes
-      // The colors will automatically update due to the getThemeColors function
-    }
-  }, [systemColorScheme, theme]);
+    console.log('System color scheme:', systemColorScheme);
+    console.log('Current theme setting:', theme);
+    console.log('Effective theme:', effectiveTheme);
+    console.log('Is dark mode:', isDark);
+  }, [systemColorScheme, theme, effectiveTheme, isDark]);
 
   const value: ThemeContextType = {
     theme,

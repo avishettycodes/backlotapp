@@ -30,8 +30,8 @@ export const Colors = {
     overlay: 'rgba(0, 0, 0, 0.5)',
     backdrop: 'rgba(0, 0, 0, 0.6)',
     
-    // Tab bar colors
-    tabBar: 'rgba(0, 0, 0, 0.8)',
+    // Tab bar colors - Always black in light mode
+    tabBar: 'rgba(0, 0, 0, 0.9)',
     tabBarText: 'rgba(255, 255, 255, 0.6)',
     tabBarActive: '#3b82f6',
     
@@ -77,7 +77,7 @@ export const Colors = {
     overlay: 'rgba(0, 0, 0, 0.7)',
     backdrop: 'rgba(0, 0, 0, 0.8)',
     
-    // Tab bar colors
+    // Tab bar colors - Always black in dark mode too
     tabBar: 'rgba(0, 0, 0, 0.9)',
     tabBarText: 'rgba(255, 255, 255, 0.6)',
     tabBarActive: '#60a5fa',

@@ -120,7 +120,7 @@ export default function SwipeDeck() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCar, setSelectedCar] = useState<Car | null>(null);
   const [settingsVisible, setSettingsVisible] = useState(false);
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   
   const { addToGarage, clearGarage } = useGarageStore();
   const { carQueue, addToQueue, removeFromQueue, clearQueue } = useSwipeQueueStore();
@@ -208,7 +208,7 @@ export default function SwipeDeck() {
       
       {/* Settings Button */}
       <TouchableOpacity
-        style={[styles.settingsButton, { backgroundColor: colors.backdrop }]}
+        style={[styles.settingsButton, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.2)' : colors.backdrop }]}
         onPress={() => setSettingsVisible(true)}
         activeOpacity={0.8}
       >
