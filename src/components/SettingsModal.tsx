@@ -85,15 +85,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
   });
 
   const [swipePreferences, setSwipePreferences] = useState({
-    sensitivity: 'normal',
     allowUndo: true,
-    animationSpeed: 'normal',
   });
 
   const [appearance, setAppearance] = useState({
     theme: 'system',
-    cardStyle: 'rounded',
-    fontSize: 'medium',
   });
 
   const [location, setLocation] = useState({
@@ -221,25 +217,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
           {renderSection('Swipe Preferences',
             <>
               <SettingItem
-                title="Swipe Sensitivity"
-                subtitle="Normal"
-                icon="hand-left-outline"
-                showValue={swipePreferences.sensitivity}
-                onPress={() => Alert.alert('Swipe Sensitivity', 'Sensitivity settings coming soon!')}
-              />
-              <SettingItem
                 title="Allow Undo Last Swipe"
                 icon="arrow-undo-outline"
                 showSwitch={true}
                 switchValue={swipePreferences.allowUndo}
                 onSwitchChange={(value) => setSwipePreferences(prev => ({ ...prev, allowUndo: value }))}
-              />
-              <SettingItem
-                title="Animation Speed"
-                subtitle="Normal"
-                icon="speedometer-outline"
-                showValue={swipePreferences.animationSpeed}
-                onPress={() => Alert.alert('Animation Speed', 'Animation settings coming soon!')}
               />
             </>
           )}
@@ -253,20 +235,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
                 icon="color-palette-outline"
                 showValue={appearance.theme === 'system' ? 'System' : appearance.theme === 'dark' ? 'Dark' : 'Light'}
                 onPress={() => Alert.alert('Theme', 'Theme settings coming soon!')}
-              />
-              <SettingItem
-                title="Card Style"
-                subtitle="Rounded corners"
-                icon="card-outline"
-                showValue={appearance.cardStyle === 'rounded' ? 'Rounded' : 'Square'}
-                onPress={() => Alert.alert('Card Style', 'Card style settings coming soon!')}
-              />
-              <SettingItem
-                title="Font Size"
-                subtitle="Medium"
-                icon="text-outline"
-                showValue={appearance.fontSize === 'medium' ? 'Medium' : appearance.fontSize === 'small' ? 'Small' : 'Large'}
-                onPress={() => Alert.alert('Font Size', 'Font size settings coming soon!')}
               />
             </>
           )}
