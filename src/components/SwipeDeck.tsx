@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
     paddingHorizontal: scaledSize(20),
-    paddingTop: scaledSize(80),
+    paddingTop: scaledSize(120),
   },
   card: {
     width: SCREEN_WIDTH * 0.92,
