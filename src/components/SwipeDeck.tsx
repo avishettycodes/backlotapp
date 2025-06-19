@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: SCREEN_WIDTH * 0.92,
-    height: SCREEN_HEIGHT * 0.7,
+    height: SCREEN_HEIGHT * 0.65,
     backgroundColor: '#fff',
     borderRadius: scaledSize(24),
     overflow: 'hidden',
