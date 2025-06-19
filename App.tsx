@@ -9,6 +9,7 @@ import { Platform } from 'react-native';
 import SwipeDeck from './src/components/SwipeDeck';
 import Garage from './src/components/Garage';
 import Submit from './src/components/Submit';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -20,6 +21,7 @@ const Tab = createBottomTabNavigator<RootTabParamList>();
 
 function TabNavigator() {
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   
   return (
     <Tab.Navigator
@@ -44,10 +46,10 @@ function TabNavigator() {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#3b82f6',
-        tabBarInactiveTintColor: 'rgba(255,255,255,0.6)',
+        tabBarActiveTintColor: colors.tabBarActive,
+        tabBarInactiveTintColor: colors.tabBarText,
         tabBarStyle: {
-          backgroundColor: 'rgba(0,0,0,0.8)',
+          backgroundColor: colors.tabBar,
           borderTopWidth: 0,
           elevation: 0,
           shadowOpacity: 0,
@@ -69,15 +71,25 @@ function TabNavigator() {
   );
 }
 
-export default function App() {
+function AppContent() {
+  const { isDark } = useTheme();
+  
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <NavigationContainer>
           <TabNavigator />
-          <StatusBar style="light" />
+          <StatusBar style={isDark ? "light" : "dark"} />
         </NavigationContainer>
       </SafeAreaProvider>
     </GestureHandlerRootView>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 } 

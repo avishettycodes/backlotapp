@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const scale = Math.min(SCREEN_WIDTH / 375, SCREEN_HEIGHT / 812);
@@ -45,38 +46,44 @@ const SettingItem: React.FC<SettingItemProps> = ({
   onSwitchChange,
   showChevron = true,
   showValue,
-}) => (
-  <TouchableOpacity
-    style={styles.settingItem}
-    onPress={onPress}
-    disabled={showSwitch}
-  >
-    <View style={styles.settingItemLeft}>
-      <View style={styles.iconContainer}>
-        <Ionicons name={icon} size={scaledSize(20)} color="#3b82f6" />
+}) => {
+  const { colors } = useTheme();
+  
+  return (
+    <TouchableOpacity
+      style={[styles.settingItem, { backgroundColor: colors.settingsItem, borderBottomColor: colors.settingsItemBorder }]}
+      onPress={onPress}
+      disabled={showSwitch}
+    >
+      <View style={styles.settingItemLeft}>
+        <View style={[styles.iconContainer, { backgroundColor: colors.settingsIconBg }]}>
+          <Ionicons name={icon} size={scaledSize(20)} color={colors.settingsIcon} />
+        </View>
+        <View style={styles.settingTextContainer}>
+          <Text style={[styles.settingTitle, { color: colors.text }]}>{title}</Text>
+          {subtitle && <Text style={[styles.settingSubtitle, { color: colors.textSecondary }]}>{subtitle}</Text>}
+        </View>
       </View>
-      <View style={styles.settingTextContainer}>
-        <Text style={styles.settingTitle}>{title}</Text>
-        {subtitle && <Text style={styles.settingSubtitle}>{subtitle}</Text>}
+      <View style={styles.settingItemRight}>
+        {showValue && <Text style={[styles.settingValue, { color: colors.textSecondary }]}>{showValue}</Text>}
+        {showSwitch ? (
+          <Switch
+            value={switchValue}
+            onValueChange={onSwitchChange}
+            trackColor={{ false: colors.border, true: colors.primary }}
+            thumbColor={switchValue ? colors.textInverse : colors.textInverse}
+          />
+        ) : (
+          showChevron && <Ionicons name="chevron-forward" size={scaledSize(16)} color={colors.textTertiary} />
+        )}
       </View>
-    </View>
-    <View style={styles.settingItemRight}>
-      {showValue && <Text style={styles.settingValue}>{showValue}</Text>}
-      {showSwitch ? (
-        <Switch
-          value={switchValue}
-          onValueChange={onSwitchChange}
-          trackColor={{ false: '#e5e7eb', true: '#3b82f6' }}
-          thumbColor={switchValue ? '#ffffff' : '#ffffff'}
-        />
-      ) : (
-        showChevron && <Ionicons name="chevron-forward" size={scaledSize(16)} color="#9ca3af" />
-      )}
-    </View>
-  </TouchableOpacity>
-);
+    </TouchableOpacity>
+  );
+};
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
+  const { colors, theme, setTheme } = useTheme();
+  
   const [notifications, setNotifications] = useState({
     newCarAlerts: 'all',
     priceDropWarnings: true,
@@ -86,10 +93,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
 
   const [swipePreferences, setSwipePreferences] = useState({
     allowUndo: true,
-  });
-
-  const [appearance, setAppearance] = useState({
-    theme: 'auto',
   });
 
   const [location, setLocation] = useState({
@@ -131,15 +134,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
     );
   };
 
-  const handleThemeSelection = (theme: 'light' | 'dark' | 'auto') => {
-    setAppearance(prev => ({ ...prev, theme }));
+  const handleThemeSelection = (selectedTheme: 'light' | 'dark' | 'auto') => {
+    setTheme(selectedTheme);
     setShowThemeModal(false);
-    // Here you would typically update the app's theme
-    console.log('Theme changed to:', theme);
+    console.log('Theme changed to:', selectedTheme);
   };
 
-  const getThemeDisplayValue = (theme: string) => {
-    switch (theme) {
+  const getThemeDisplayValue = (currentTheme: string) => {
+    switch (currentTheme) {
       case 'light': return 'Light Mode';
       case 'dark': return 'Dark Mode';
       case 'auto': return 'Auto';
@@ -149,8 +151,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
 
   const renderSection = (title: string, children: React.ReactNode) => (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <View style={styles.sectionContent}>
+      <Text style={[styles.sectionTitle, { color: colors.settingsSection }]}>{title}</Text>
+      <View style={[styles.sectionContent, { backgroundColor: colors.settingsItem, borderColor: colors.border }]}>
         {children}
       </View>
     </View>
@@ -163,12 +165,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]} edges={['top']}>
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Settings</Text>
+        <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Settings</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Ionicons name="close" size={scaledSize(24)} color="#000" />
+            <Ionicons name="close" size={scaledSize(24)} color={colors.text} />
           </TouchableOpacity>
         </View>
 
@@ -251,7 +253,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
                 title="Theme"
                 subtitle="Follows device setting"
                 icon="color-palette-outline"
-                showValue={getThemeDisplayValue(appearance.theme)}
+                showValue={getThemeDisplayValue(theme)}
                 onPress={() => setShowThemeModal(true)}
               />
             </>
@@ -361,90 +363,96 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
           animationType="fade"
           onRequestClose={() => setShowThemeModal(false)}
         >
-          <View style={styles.themeModalOverlay}>
-            <View style={styles.themeModalContent}>
+          <View style={[styles.themeModalOverlay, { backgroundColor: colors.overlay }]}>
+            <View style={[styles.themeModalContent, { backgroundColor: colors.modal }]}>
               <View style={styles.themeModalHeader}>
-                <Text style={styles.themeModalTitle}>Choose Theme</Text>
+                <Text style={[styles.themeModalTitle, { color: colors.text }]}>Choose Theme</Text>
                 <TouchableOpacity onPress={() => setShowThemeModal(false)}>
-                  <Ionicons name="close" size={scaledSize(24)} color="#000" />
+                  <Ionicons name="close" size={scaledSize(24)} color={colors.text} />
                 </TouchableOpacity>
               </View>
               
               <TouchableOpacity
                 style={[
                   styles.themeOption,
-                  appearance.theme === 'light' && styles.themeOptionSelected
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                  theme === 'light' && { borderColor: colors.primary, backgroundColor: colors.primaryLight }
                 ]}
                 onPress={() => handleThemeSelection('light')}
               >
                 <Ionicons 
                   name="sunny-outline" 
                   size={scaledSize(24)} 
-                  color={appearance.theme === 'light' ? '#3b82f6' : '#6b7280'} 
+                  color={theme === 'light' ? colors.primary : colors.textSecondary} 
                 />
                 <View style={styles.themeOptionText}>
                   <Text style={[
                     styles.themeOptionTitle,
-                    appearance.theme === 'light' && styles.themeOptionTitleSelected
+                    { color: colors.text },
+                    theme === 'light' && { color: colors.primary }
                   ]}>
                     Light Mode
                   </Text>
-                  <Text style={styles.themeOptionSubtitle}>Always use light theme</Text>
+                  <Text style={[styles.themeOptionSubtitle, { color: colors.textSecondary }]}>Always use light theme</Text>
                 </View>
-                {appearance.theme === 'light' && (
-                  <Ionicons name="checkmark" size={scaledSize(20)} color="#3b82f6" />
+                {theme === 'light' && (
+                  <Ionicons name="checkmark" size={scaledSize(20)} color={colors.primary} />
                 )}
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[
                   styles.themeOption,
-                  appearance.theme === 'dark' && styles.themeOptionSelected
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                  theme === 'dark' && { borderColor: colors.primary, backgroundColor: colors.primaryLight }
                 ]}
                 onPress={() => handleThemeSelection('dark')}
               >
                 <Ionicons 
                   name="moon-outline" 
                   size={scaledSize(24)} 
-                  color={appearance.theme === 'dark' ? '#3b82f6' : '#6b7280'} 
+                  color={theme === 'dark' ? colors.primary : colors.textSecondary} 
                 />
                 <View style={styles.themeOptionText}>
                   <Text style={[
                     styles.themeOptionTitle,
-                    appearance.theme === 'dark' && styles.themeOptionTitleSelected
+                    { color: colors.text },
+                    theme === 'dark' && { color: colors.primary }
                   ]}>
                     Dark Mode
                   </Text>
-                  <Text style={styles.themeOptionSubtitle}>Always use dark theme</Text>
+                  <Text style={[styles.themeOptionSubtitle, { color: colors.textSecondary }]}>Always use dark theme</Text>
                 </View>
-                {appearance.theme === 'dark' && (
-                  <Ionicons name="checkmark" size={scaledSize(20)} color="#3b82f6" />
+                {theme === 'dark' && (
+                  <Ionicons name="checkmark" size={scaledSize(20)} color={colors.primary} />
                 )}
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[
                   styles.themeOption,
-                  appearance.theme === 'auto' && styles.themeOptionSelected
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                  theme === 'auto' && { borderColor: colors.primary, backgroundColor: colors.primaryLight }
                 ]}
                 onPress={() => handleThemeSelection('auto')}
               >
                 <Ionicons 
                   name="settings-outline" 
                   size={scaledSize(24)} 
-                  color={appearance.theme === 'auto' ? '#3b82f6' : '#6b7280'} 
+                  color={theme === 'auto' ? colors.primary : colors.textSecondary} 
                 />
                 <View style={styles.themeOptionText}>
                   <Text style={[
                     styles.themeOptionTitle,
-                    appearance.theme === 'auto' && styles.themeOptionTitleSelected
+                    { color: colors.text },
+                    theme === 'auto' && { color: colors.primary }
                   ]}>
                     Auto
                   </Text>
-                  <Text style={styles.themeOptionSubtitle}>Follow device setting</Text>
+                  <Text style={[styles.themeOptionSubtitle, { color: colors.textSecondary }]}>Follow device setting</Text>
                 </View>
-                {appearance.theme === 'auto' && (
-                  <Ionicons name="checkmark" size={scaledSize(20)} color="#3b82f6" />
+                {theme === 'auto' && (
+                  <Ionicons name="checkmark" size={scaledSize(20)} color={colors.primary} />
                 )}
               </TouchableOpacity>
             </View>
@@ -458,7 +466,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
   },
   header: {
     flexDirection: 'row',
@@ -466,14 +473,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: scaledSize(16),
     paddingVertical: scaledSize(12),
-    backgroundColor: 'white',
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
   },
   headerTitle: {
     fontSize: scaledFontSize(20),
     fontWeight: 'bold',
-    color: '#1f2937',
   },
   closeButton: {
     padding: scaledSize(4),
@@ -487,17 +491,14 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: scaledFontSize(14),
     fontWeight: '600',
-    color: '#6b7280',
     marginBottom: scaledSize(8),
     paddingHorizontal: scaledSize(16),
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   sectionContent: {
-    backgroundColor: 'white',
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: '#e5e7eb',
   },
   settingItem: {
     flexDirection: 'row',
@@ -505,9 +506,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: scaledSize(16),
     paddingVertical: scaledSize(16),
-    backgroundColor: 'white',
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
   },
   settingItemLeft: {
     flexDirection: 'row',
@@ -518,7 +517,6 @@ const styles = StyleSheet.create({
     width: scaledSize(32),
     height: scaledSize(32),
     borderRadius: scaledSize(8),
-    backgroundColor: '#eff6ff',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: scaledSize(12),
@@ -529,12 +527,10 @@ const styles = StyleSheet.create({
   settingTitle: {
     fontSize: scaledFontSize(16),
     fontWeight: '500',
-    color: '#1f2937',
     marginBottom: scaledSize(2),
   },
   settingSubtitle: {
     fontSize: scaledFontSize(14),
-    color: '#6b7280',
   },
   settingItemRight: {
     flexDirection: 'row',
@@ -542,17 +538,14 @@ const styles = StyleSheet.create({
   },
   settingValue: {
     fontSize: scaledFontSize(14),
-    color: '#6b7280',
     marginRight: scaledSize(8),
   },
   themeModalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   themeModalContent: {
-    backgroundColor: 'white',
     padding: scaledSize(20),
     borderRadius: scaledSize(12),
     width: '85%',
@@ -567,7 +560,6 @@ const styles = StyleSheet.create({
   themeModalTitle: {
     fontSize: scaledFontSize(18),
     fontWeight: 'bold',
-    color: '#1f2937',
   },
   themeOption: {
     flexDirection: 'row',
@@ -575,13 +567,7 @@ const styles = StyleSheet.create({
     padding: scaledSize(16),
     marginBottom: scaledSize(12),
     borderWidth: 2,
-    borderColor: '#e5e7eb',
     borderRadius: scaledSize(12),
-    backgroundColor: '#f9fafb',
-  },
-  themeOptionSelected: {
-    borderColor: '#3b82f6',
-    backgroundColor: '#eff6ff',
   },
   themeOptionText: {
     flex: 1,
@@ -590,15 +576,10 @@ const styles = StyleSheet.create({
   themeOptionTitle: {
     fontSize: scaledFontSize(16),
     fontWeight: '600',
-    color: '#1f2937',
     marginBottom: scaledSize(2),
-  },
-  themeOptionTitleSelected: {
-    color: '#3b82f6',
   },
   themeOptionSubtitle: {
     fontSize: scaledFontSize(14),
-    color: '#6b7280',
   },
 });
 

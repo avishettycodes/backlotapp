@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import CarDetailModal from './CarDetailModal';
 import SettingsModal from './SettingsModal';
+import { useTheme } from '../context/ThemeContext';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH - 32; // Full width minus padding
@@ -30,6 +31,7 @@ const Garage = () => {
   const [selectedCar, setSelectedCar] = useState<Car | null>(null)
   const [modalVisible, setModalVisible] = useState(false)
   const [settingsVisible, setSettingsVisible] = useState(false)
+  const { colors } = useTheme();
   
   // Subscribe to both stores
   const { cars: garageCars, removeFromGarage, clearGarage } = useGarageStore()
@@ -66,60 +68,60 @@ const Garage = () => {
   const renderCarCard = ({ item: car }: { item: Car }) => (
     <View style={styles.cardContainer}>
       <TouchableOpacity
-        style={styles.card}
+        style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
         activeOpacity={0.8}
         onPress={() => openCarModal(car)}
       >
         <Image source={{ uri: car.image }} style={styles.image} />
         <View style={styles.cardContent}>
-          <Text style={styles.title}>
+          <Text style={[styles.title, { color: colors.text }]}>
             {car.year} {car.make} {car.model}
           </Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             {car.mileage?.toLocaleString()} mi · {car.location}
           </Text>
-          <Text style={styles.price}>${car.price?.toLocaleString()}</Text>
+          <Text style={[styles.price, { color: colors.primary }]}>${car.price?.toLocaleString()}</Text>
         </View>
       </TouchableOpacity>
 
-      <View style={styles.actionButtons}>
+      <View style={[styles.actionButtons, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
         <TouchableOpacity
           style={styles.actionButton}
           activeOpacity={0.8}
           onPress={() => Alert.alert('Message Seller', 'This feature is coming soon!')}
         >
-          <Ionicons name="chatbubble-outline" size={scaledSize(24)} color="#3b82f6" />
+          <Ionicons name="chatbubble-outline" size={scaledSize(24)} color={colors.primary} />
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionButton}
           activeOpacity={0.8}
           onPress={() => handleRemoveFromGarage(car.id)}
         >
-          <Ionicons name="trash-outline" size={scaledSize(24)} color="#ef4444" />
+          <Ionicons name="trash-outline" size={scaledSize(24)} color={colors.error} />
         </TouchableOpacity>
       </View>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Garage</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]} edges={['top']}>
+      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>My Garage</Text>
         <TouchableOpacity
           style={styles.settingsButton}
           onPress={() => setSettingsVisible(true)}
           activeOpacity={0.8}
         >
-          <Ionicons name="settings-outline" size={scaledSize(24)} color="#3b82f6" />
+          <Ionicons name="settings-outline" size={scaledSize(24)} color={colors.primary} />
         </TouchableOpacity>
       </View>
       
       <View style={styles.content}>
         {garageCars.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="car-outline" size={scaledSize(64)} color="#ccc" />
-            <Text style={styles.emptyStateText}>Your garage is empty</Text>
-            <Text style={styles.emptyStateSubtext}>Swipe right on cars to add them to your garage</Text>
+            <Ionicons name="car-outline" size={scaledSize(64)} color={colors.textTertiary} />
+            <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>Your garage is empty</Text>
+            <Text style={[styles.emptyStateSubtext, { color: colors.textTertiary }]}>Swipe right on cars to add them to your garage</Text>
           </View>
         ) : (
           <FlatList
@@ -158,16 +160,13 @@ const Garage = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f0f0',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: scaledSize(16),
-    backgroundColor: 'white',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   headerTitle: {
     fontSize: scaledFontSize(24),
@@ -189,13 +188,11 @@ const styles = StyleSheet.create({
   },
   emptyStateText: {
     fontSize: scaledFontSize(18),
-    color: '#666',
     marginTop: scaledSize(16),
     marginBottom: scaledSize(8),
   },
   emptyStateSubtext: {
     fontSize: scaledFontSize(14),
-    color: '#999',
     textAlign: 'center',
   },
   cardContainer: {
@@ -203,11 +200,9 @@ const styles = StyleSheet.create({
     marginRight: scaledSize(16),
   },
   card: {
-    backgroundColor: 'white',
     borderRadius: scaledSize(12),
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -231,21 +226,17 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: scaledFontSize(14),
-    color: '#666',
     marginBottom: scaledSize(8),
   },
   price: {
     fontSize: scaledFontSize(16),
     fontWeight: 'bold',
-    color: '#3b82f6',
   },
   actionButtons: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     padding: scaledSize(16),
-    backgroundColor: 'white',
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
   },
   actionButton: {
     padding: scaledSize(8),

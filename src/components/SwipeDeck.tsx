@@ -17,6 +17,7 @@ import SettingsModal from './SettingsModal';
 import { Car } from '../types/car';
 import { useGarageStore } from '../store/garageStore';
 import { useSwipeQueueStore } from '../store/swipeQueueStore';
+import { useTheme } from '../context/ThemeContext';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -119,6 +120,7 @@ export default function SwipeDeck() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCar, setSelectedCar] = useState<Car | null>(null);
   const [settingsVisible, setSettingsVisible] = useState(false);
+  const { colors } = useTheme();
   
   const { addToGarage, clearGarage } = useGarageStore();
   const { carQueue, addToQueue, removeFromQueue, clearQueue } = useSwipeQueueStore();
@@ -193,24 +195,24 @@ export default function SwipeDeck() {
   const renderNoMoreCards = () => {
     return (
       <View style={styles.noMoreCards}>
-        <Ionicons name="car-outline" size={64} color="#666" />
-        <Text style={styles.noMoreCardsText}>No more cars!</Text>
-        <Text style={styles.noMoreCardsSubtext}>Check back later for new listings</Text>
+        <Ionicons name="car-outline" size={64} color={colors.textSecondary} />
+        <Text style={[styles.noMoreCardsText, { color: colors.text }]}>No more cars!</Text>
+        <Text style={[styles.noMoreCardsSubtext, { color: colors.textSecondary }]}>Check back later for new listings</Text>
       </View>
     );
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       
       {/* Settings Button */}
       <TouchableOpacity
-        style={styles.settingsButton}
+        style={[styles.settingsButton, { backgroundColor: colors.backdrop }]}
         onPress={() => setSettingsVisible(true)}
         activeOpacity={0.8}
       >
-        <Ionicons name="settings-outline" size={scaledSize(24)} color="#fff" />
+        <Ionicons name="settings-outline" size={scaledSize(24)} color={colors.textInverse} />
       </TouchableOpacity>
 
       {/* Background Blur Effect */}
@@ -223,7 +225,7 @@ export default function SwipeDeck() {
       )}
 
       {/* Dark Overlay for Contrast */}
-      <View style={styles.darkOverlay} />
+      <View style={[styles.darkOverlay, { backgroundColor: colors.backdrop }]} />
 
       {/* Swiper Component */}
       <View style={styles.swiperContainer}>
@@ -243,14 +245,14 @@ export default function SwipeDeck() {
                 label: {
                   fontSize: scaledFontSize(24),
                   fontWeight: 'bold',
-                  color: '#FFFFFF',
+                  color: colors.textInverse,
                   borderWidth: 3,
-                  borderColor: '#FF3B30',
+                  borderColor: colors.swipeNope,
                   borderStyle: 'solid',
                   paddingHorizontal: scaledSize(12),
                   paddingVertical: scaledSize(6),
                   borderRadius: scaledSize(2),
-                  backgroundColor: '#FF3B30',
+                  backgroundColor: colors.swipeNope,
                   textShadowColor: 'rgba(0,0,0,0.2)',
                   textShadowOffset: { width: 1, height: 1 },
                   textShadowRadius: 1,
@@ -270,14 +272,14 @@ export default function SwipeDeck() {
                 label: {
                   fontSize: scaledFontSize(24),
                   fontWeight: 'bold',
-                  color: '#FFFFFF',
+                  color: colors.textInverse,
                   borderWidth: 3,
-                  borderColor: '#34C759',
+                  borderColor: colors.swipeSave,
                   borderStyle: 'solid',
                   paddingHorizontal: scaledSize(12),
                   paddingVertical: scaledSize(6),
                   borderRadius: scaledSize(2),
-                  backgroundColor: '#34C759',
+                  backgroundColor: colors.swipeSave,
                   textShadowColor: 'rgba(0,0,0,0.2)',
                   textShadowOffset: { width: 1, height: 1 },
                   textShadowRadius: 1,
@@ -319,7 +321,6 @@ export default function SwipeDeck() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
   },
   settingsButton: {
     position: 'absolute',
@@ -328,7 +329,6 @@ const styles = StyleSheet.create({
     width: scaledSize(44),
     height: scaledSize(44),
     borderRadius: scaledSize(22),
-    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1000,
