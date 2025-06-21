@@ -7,8 +7,10 @@ import {
   Dimensions,
   StatusBar,
   TouchableOpacity,
+  Alert,
+  FlatList,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Swiper from 'react-native-deck-swiper';
@@ -35,7 +37,7 @@ const sampleCars: Car[] = [
     model: "Camry",
     price: 35000,
     mileage: 45000,
-    location: "Los Angeles, CA",
+    location: "San Ramon, CA",
     image: "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
     images: [
       "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
@@ -55,7 +57,8 @@ const sampleCars: Car[] = [
     trim: "SE",
     seats: 5,
     pros: ["Reliable", "Comfortable", "Good fuel economy"],
-    cons: ["Expensive to maintain", "Small trunk space"]
+    cons: ["Expensive to maintain", "Small trunk space"],
+    titleStatus: "Clean"
   },
   {
     id: 2,
@@ -64,7 +67,7 @@ const sampleCars: Car[] = [
     model: "Civic",
     price: 28000,
     mileage: 32000,
-    location: "San Francisco, CA",
+    location: "Pleasanton, CA",
     image: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
     images: [
       "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
@@ -83,7 +86,8 @@ const sampleCars: Car[] = [
     trim: "Sport",
     seats: 5,
     pros: ["Sporty handling", "Great fuel economy", "Modern features"],
-    cons: ["Small back seats", "Firm ride"]
+    cons: ["Small back seats", "Firm ride"],
+    titleStatus: "Salvage"
   },
   {
     id: 3,
@@ -92,7 +96,7 @@ const sampleCars: Car[] = [
     model: "3 Series",
     price: 42000,
     mileage: 38000,
-    location: "New York, NY",
+    location: "Danville, CA",
     image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
     images: [
       "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
@@ -112,18 +116,19 @@ const sampleCars: Car[] = [
     trim: "330i",
     seats: 5,
     pros: ["Luxury features", "Excellent performance", "Premium interior"],
-    cons: ["Expensive maintenance", "High insurance costs"]
+    cons: ["Expensive maintenance", "High insurance costs"],
+    titleStatus: "Rebuilt"
   }
 ];
 
 export default function SwipeDeck() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCar, setSelectedCar] = useState<Car | null>(null);
-  const [settingsVisible, setSettingsVisible] = useState(false);
   const { colors, isDark } = useTheme();
   
   const { addToGarage, clearGarage } = useGarageStore();
   const { carQueue, addToQueue, removeFromQueue, clearQueue } = useSwipeQueueStore();
+  const insets = useSafeAreaInsets();
 
   // Development mode: Reset stores on component mount
   useEffect(() => {
@@ -163,32 +168,42 @@ export default function SwipeDeck() {
 
   const renderCard = (car: Car, cardIndex: number) => {
     return (
-      <TouchableOpacity
-        style={styles.card}
-        activeOpacity={0.9}
-        onPress={() => handleCardPress(car)}
-      >
-        <Image source={{ uri: car.image }} style={styles.cardImage} />
-        <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.8)']}
-          style={styles.gradientOverlay}
-          locations={[0.7, 1]}
-        />
+      <View style={styles.cardContainer}>
+        {/* Background cards for stack effect */}
+        <View style={[styles.backgroundCard, styles.backgroundCard1]} />
+        <View style={[styles.backgroundCard, styles.backgroundCard2]} />
+        <View style={[styles.backgroundCard, styles.backgroundCard3]} />
         
-        <View style={styles.cardContent}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.carTitle}>
-              {car.year} {car.make} {car.model}
+        <TouchableOpacity
+          style={[styles.card, { backgroundColor: colors.card }]}
+          activeOpacity={0.9}
+          onPress={() => handleCardPress(car)}
+        >
+          <Image source={{ uri: car.image }} style={styles.cardImage} />
+          <LinearGradient
+            colors={['transparent', 'rgba(0,0,0,0.8)']}
+            style={styles.gradientOverlay}
+            locations={[0.7, 1]}
+          />
+          
+          <View style={styles.cardContent}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.carTitle}>
+                {car.year} {car.make} {car.model}
+              </Text>
+              <Text style={[styles.carPrice, { color: colors.primary }]}>
+                ${car.price?.toLocaleString()}
+              </Text>
+            </View>
+            <Text style={styles.carSubtitle}>
+              {car.mileage?.toLocaleString()} mi • {car.location}
             </Text>
-            <Text style={styles.carPrice}>
-              ${car.price?.toLocaleString()}
+            <Text style={styles.carTitleStatus}>
+              {car.titleStatus || 'Clean'} Title
             </Text>
           </View>
-          <Text style={styles.carSubtitle}>
-            {car.mileage?.toLocaleString()} mi • {car.location}
-          </Text>
-        </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
+      </View>
     );
   };
 
@@ -203,18 +218,9 @@ export default function SwipeDeck() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]} edges={['top']}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       
-      {/* Settings Button */}
-      <TouchableOpacity
-        style={[styles.settingsButton, { backgroundColor: colors.primary }]}
-        onPress={() => setSettingsVisible(true)}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="settings-outline" size={scaledSize(24)} color={colors.textInverse} />
-      </TouchableOpacity>
-
       {/* Background Blur Effect - Only show in dark mode */}
       {isDark && allCars.length > 0 && (
         <Image
@@ -245,7 +251,7 @@ export default function SwipeDeck() {
               title: 'NOPE',
               style: {
                 label: {
-                  fontSize: scaledFontSize(24),
+                  fontSize: scaledFontSize(20),
                   fontWeight: 'bold',
                   color: colors.textInverse,
                   borderWidth: 3,
@@ -272,7 +278,7 @@ export default function SwipeDeck() {
               title: 'SAVE',
               style: {
                 label: {
-                  fontSize: scaledFontSize(24),
+                  fontSize: scaledFontSize(20),
                   fontWeight: 'bold',
                   color: colors.textInverse,
                   borderWidth: 3,
@@ -310,12 +316,6 @@ export default function SwipeDeck() {
         }}
         isInGarage={false}
       />
-
-      {/* Settings Modal */}
-      <SettingsModal
-        visible={settingsVisible}
-        onClose={() => setSettingsVisible(false)}
-      />
     </SafeAreaView>
   );
 }
@@ -324,41 +324,32 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  settingsButton: {
-    position: 'absolute',
-    top: scaledSize(20),
-    right: scaledSize(20),
-    width: scaledSize(44),
-    height: scaledSize(44),
-    borderRadius: scaledSize(22),
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
   backgroundImage: {
     ...StyleSheet.absoluteFillObject,
     opacity: 0.3,
   },
   swiperContainer: {
-    flex: 1,
-    justifyContent: 'flex-start',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: scaledSize(20),
+    paddingHorizontal: scaledSize(16),
     paddingTop: scaledSize(120),
+    paddingBottom: scaledSize(120),
+  },
+  cardContainer: {
+    position: 'relative',
+    width: SCREEN_WIDTH * 0.88,
+    height: SCREEN_HEIGHT * 0.68,
   },
   card: {
-    width: SCREEN_WIDTH * 0.92,
-    height: SCREEN_HEIGHT * 0.65,
+    width: '100%',
+    height: '100%',
     backgroundColor: '#fff',
-    borderRadius: scaledSize(24),
+    borderRadius: scaledSize(20),
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: {
@@ -372,8 +363,8 @@ const styles = StyleSheet.create({
   cardImage: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
-    borderRadius: scaledSize(24),
+    resizeMode: 'contain',
+    borderRadius: scaledSize(20),
   },
   gradientOverlay: {
     position: 'absolute',
@@ -394,22 +385,30 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-end',
     marginBottom: scaledSize(8),
+    gap: scaledSize(8),
   },
   carTitle: {
-    fontSize: scaledFontSize(28),
+    fontSize: scaledFontSize(22),
     fontWeight: 'bold',
     color: '#fff',
     flex: 1,
+    flexShrink: 1,
   },
   carPrice: {
-    fontSize: scaledFontSize(24),
+    fontSize: scaledFontSize(20),
     fontWeight: 'bold',
-    color: '#3b82f6',
   },
   carSubtitle: {
     fontSize: scaledFontSize(16),
     color: '#fff',
     opacity: 0.9,
+  },
+  carTitleStatus: {
+    fontSize: scaledFontSize(12),
+    color: '#fff',
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    marginTop: scaledSize(4),
   },
   noMoreCards: {
     flex: 1,
@@ -426,11 +425,38 @@ const styles = StyleSheet.create({
   },
   noMoreCardsSubtext: {
     fontSize: scaledFontSize(16),
-    color: '#666',
     textAlign: 'center',
+    marginTop: scaledSize(8),
   },
   darkOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  backgroundCard: {
+    position: 'absolute',
+    width: SCREEN_WIDTH * 0.88,
+    height: SCREEN_HEIGHT * 0.68,
+    borderRadius: scaledSize(20),
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  backgroundCard1: {
+    top: scaledSize(4),
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  backgroundCard2: {
+    top: scaledSize(8),
+    backgroundColor: 'rgba(0,0,0,0.1)',
+  },
+  backgroundCard3: {
+    top: scaledSize(12),
+    backgroundColor: 'rgba(0,0,0,0.15)',
   },
 }); 

@@ -12,7 +12,7 @@ import {
   Dimensions,
   Alert,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import CarDetailModal from './CarDetailModal';
@@ -30,8 +30,8 @@ const scaledSize = (size: number) => size * scale;
 const Garage = () => {
   const [selectedCar, setSelectedCar] = useState<Car | null>(null)
   const [modalVisible, setModalVisible] = useState(false)
-  const [settingsVisible, setSettingsVisible] = useState(false)
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   
   // Subscribe to both stores
   const { cars: garageCars, removeFromGarage, clearGarage } = useGarageStore()
@@ -105,19 +105,6 @@ const Garage = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]} edges={['top']}>
-      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>My Garage</Text>
-      </View>
-      
-      {/* Settings Button */}
-      <TouchableOpacity
-        style={[styles.settingsButton, { backgroundColor: colors.primary }]}
-        onPress={() => setSettingsVisible(true)}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="settings-outline" size={scaledSize(24)} color={colors.textInverse} />
-      </TouchableOpacity>
-      
       <View style={styles.content}>
         {garageCars.length === 0 ? (
           <View style={styles.emptyState}>
@@ -149,12 +136,6 @@ const Garage = () => {
         isInGarage={true}
         onRemoveFromGarage={handleRemoveFromGarage}
       />
-
-      {/* Settings Modal */}
-      <SettingsModal
-        visible={settingsVisible}
-        onClose={() => setSettingsVisible(false)}
-      />
     </SafeAreaView>
   );
 }
@@ -163,41 +144,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: scaledSize(16),
-    borderBottomWidth: 1,
-  },
-  headerTitle: {
-    fontSize: scaledFontSize(24),
-    fontWeight: 'bold',
-    flex: 1,
-    textAlign: 'center',
-  },
-  settingsButton: {
-    position: 'absolute',
-    top: scaledSize(20),
-    right: scaledSize(20),
-    width: scaledSize(44),
-    height: scaledSize(44),
-    borderRadius: scaledSize(22),
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
   content: {
     flex: 1,
-    padding: scaledSize(16),
+    paddingHorizontal: scaledSize(16),
+    paddingTop: scaledSize(20),
   },
   emptyState: {
     flex: 1,

@@ -12,7 +12,7 @@ const mockCar: Car = {
   model: "Camry",
   price: 35000,
   mileage: 45000,
-  location: "Los Angeles, CA",
+  location: "San Ramon, CA",
   image: "https://example.com/car.jpg",
   images: [
     "https://example.com/car1.jpg",
@@ -31,7 +31,8 @@ const mockCar: Car = {
   trim: "SE",
   seats: 5,
   pros: ["Reliable", "Comfortable", "Good fuel economy", "Low maintenance", "Great resale value"],
-  cons: ["Expensive to maintain", "Small trunk space", "Limited cargo room", "Premium fuel required"]
+  cons: ["Expensive to maintain", "Small trunk space", "Limited cargo room", "Premium fuel required"],
+  titleStatus: "Clean"
 };
 
 describe('CarDetailModal', () => {
@@ -81,7 +82,7 @@ describe('CarDetailModal', () => {
     );
 
     expect(screen.getByText('John Doe')).toBeInTheDocument();
-    expect(screen.getByText('Los Angeles, CA')).toBeInTheDocument();
+    expect(screen.getByText('San Ramon, CA')).toBeInTheDocument();
     expect(screen.getByText('Great Deal')).toBeInTheDocument();
     expect(screen.getByText('Listed 1 day ago')).toBeInTheDocument();
   });
@@ -213,9 +214,10 @@ describe('CarDetailModal', () => {
       model: "Camry",
       price: 35000,
       mileage: 45000,
-      location: "Los Angeles, CA",
+      location: "San Ramon, CA",
       image: "https://example.com/car.jpg",
       deal: "good",
+      titleStatus: "Clean"
     };
 
     render(

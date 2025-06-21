@@ -23,7 +23,12 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>('light');
+  // Default to dark mode for the current user (avishetty), light mode for others
+  // You can change this to your specific device identifier or username
+  const isCurrentUser = true; // Set to false for other users
+  const defaultTheme: Theme = isCurrentUser ? 'dark' : 'light';
+  
+  const [theme, setTheme] = useState<Theme>(defaultTheme);
 
   const isDark = theme === 'dark';
   const colors = getThemeColors(theme);

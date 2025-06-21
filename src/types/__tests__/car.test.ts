@@ -11,6 +11,7 @@ describe('Car type', () => {
       mileage: 50000,
       price: 25000,
       deal: 'good',
+      titleStatus: 'Clean'
     };
 
     expect(car.id).toBe(1);
@@ -33,7 +34,7 @@ describe('Car type', () => {
       mileage: 50000,
       price: 25000,
       deal: 'good',
-      location: 'New York',
+      location: 'San Ramon, CA',
       priceRating: 'Excellent',
       sellerName: 'John Doe',
       title: 'Clean Title',
@@ -48,9 +49,10 @@ describe('Car type', () => {
       pros: ['Low mileage', 'Clean interior'],
       cons: ['Minor scratches'],
       images: ['image1.jpg', 'image2.jpg'],
+      titleStatus: 'Clean'
     };
 
-    expect(car.location).toBe('New York');
+    expect(car.location).toBe('San Ramon, CA');
     expect(car.priceRating).toBe('Excellent');
     expect(car.sellerName).toBe('John Doe');
     expect(car.title).toBe('Clean Title');
@@ -77,6 +79,7 @@ describe('Car type', () => {
       mileage: 50000,
       price: 25000,
       deal: 'good',
+      titleStatus: 'Clean'
     };
 
     const fairDeal: Car = {
@@ -88,6 +91,7 @@ describe('Car type', () => {
       mileage: 40000,
       price: 20000,
       deal: 'fair',
+      titleStatus: 'Clean'
     };
 
     const badDeal: Car = {
@@ -99,6 +103,7 @@ describe('Car type', () => {
       mileage: 60000,
       price: 18000,
       deal: 'bad',
+      titleStatus: 'Clean'
     };
 
     expect(goodDeal.deal).toBe('good');
@@ -116,6 +121,7 @@ describe('Car type', () => {
       mileage: 150000,
       price: 5000,
       deal: 'fair',
+      titleStatus: 'Clean'
     };
 
     expect(typeof car.id).toBe('number');
@@ -134,6 +140,7 @@ describe('Car type', () => {
       mileage: 50000,
       price: 25000,
       deal: 'good',
+      titleStatus: 'Clean'
     };
 
     expect(typeof car.image).toBe('string');

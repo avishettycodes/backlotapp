@@ -22,4 +22,5 @@ export interface Car {
   pros?: string[]
   cons?: string[]
   images?: string[]
+  titleStatus: 'Clean' | 'Salvage' | 'Rebuilt' | 'Lien'
 } 

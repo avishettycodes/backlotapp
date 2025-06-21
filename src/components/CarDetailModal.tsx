@@ -37,6 +37,7 @@ export default function CarDetailModal({
   const [imageLoaded, setImageLoaded] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const { colors } = useTheme();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     if (visible && car) {
@@ -50,16 +51,11 @@ export default function CarDetailModal({
     }
   }, [visible, car]);
 
-  const handleMessageSeller = () => {
-    Alert.alert('Message Seller', 'This feature is coming soon!');
-    onClose();
-  };
-
   const handleRemoveFromGarage = () => {
-    if (car && onRemoveFromGarage) {
+    if (onRemoveFromGarage && car) {
       onRemoveFromGarage(car.id);
-      onClose();
     }
+    onClose();
   };
 
   const getDaysAgo = (listedDate: string) => {
@@ -192,14 +188,14 @@ export default function CarDetailModal({
                         <Text style={[styles.specValue, { color: colors.text }]}>{car.make} {car.model} {car.year}</Text>
                       </View>
                       <View style={styles.specItem}>
-                        <Text style={[styles.specLabel, { color: colors.textSecondary }]}>Transmission</Text>
-                        <Text style={[styles.specValue, { color: colors.text }]}>{car.transmission || 'Automatic'}</Text>
+                        <Text style={[styles.specLabel, { color: colors.textSecondary }]}>Title Status</Text>
+                        <Text style={[styles.specValue, { color: colors.text }]}>{car.titleStatus || 'Clean'} Title</Text>
                       </View>
                     </View>
                     <View style={styles.specRow}>
                       <View style={styles.specItem}>
-                        <Text style={[styles.specLabel, { color: colors.textSecondary }]}>Listed</Text>
-                        <Text style={[styles.specValue, { color: colors.text }]}>{car.listedDate || '2023-01-01'}</Text>
+                        <Text style={[styles.specLabel, { color: colors.textSecondary }]}>Transmission</Text>
+                        <Text style={[styles.specValue, { color: colors.text }]}>{car.transmission || 'Automatic'}</Text>
                       </View>
                       <View style={styles.specItem}>
                         <Text style={[styles.specLabel, { color: colors.textSecondary }]}>Fuel Type</Text>
@@ -208,19 +204,25 @@ export default function CarDetailModal({
                     </View>
                     <View style={styles.specRow}>
                       <View style={styles.specItem}>
-                        <Text style={[styles.specLabel, { color: colors.textSecondary }]}>Exterior</Text>
-                        <Text style={[styles.specValue, { color: colors.text }]}>{car.exteriorColor || 'Unknown'}</Text>
+                        <Text style={[styles.specLabel, { color: colors.textSecondary }]}>Listed</Text>
+                        <Text style={[styles.specValue, { color: colors.text }]}>{car.listedDate || '2023-01-01'}</Text>
                       </View>
                       <View style={styles.specItem}>
-                        <Text style={[styles.specLabel, { color: colors.textSecondary }]}>Interior</Text>
-                        <Text style={[styles.specValue, { color: colors.text }]}>{car.interiorColor || 'Unknown'}</Text>
+                        <Text style={[styles.specLabel, { color: colors.textSecondary }]}>Exterior</Text>
+                        <Text style={[styles.specValue, { color: colors.text }]}>{car.exteriorColor || 'Unknown'}</Text>
                       </View>
                     </View>
                     <View style={styles.specRow}>
                       <View style={styles.specItem}>
+                        <Text style={[styles.specLabel, { color: colors.textSecondary }]}>Interior</Text>
+                        <Text style={[styles.specValue, { color: colors.text }]}>{car.interiorColor || 'Unknown'}</Text>
+                      </View>
+                      <View style={styles.specItem}>
                         <Text style={[styles.specLabel, { color: colors.textSecondary }]}>Seats</Text>
                         <Text style={[styles.specValue, { color: colors.text }]}>{car.seats || '5'} seats</Text>
                       </View>
+                    </View>
+                    <View style={styles.specRow}>
                       <View style={styles.specItem}>
                         <Text style={[styles.specLabel, { color: colors.textSecondary }]}>Trim</Text>
                         <Text style={[styles.specValue, { color: colors.text }]}>{car.trim || 'Standard'}</Text>
@@ -266,15 +268,6 @@ export default function CarDetailModal({
 
             {/* Action Buttons */}
             <View style={[styles.actionButtons, { backgroundColor: colors.modal, borderTopColor: colors.border }]}>
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: colors.primary }]}
-                onPress={handleMessageSeller}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="chatbubble-outline" size={20} color={colors.textInverse} />
-                <Text style={[styles.actionButtonText, { color: colors.textInverse }]}>Message Seller</Text>
-              </TouchableOpacity>
-              
               {isInGarage && (
                 <TouchableOpacity
                   style={[styles.actionButton, { backgroundColor: colors.error }]}
@@ -510,5 +503,15 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  modalTitleStatus: {
+    fontSize: 16,
+    color: '#333',
+    marginHorizontal: 16,
+    marginTop: 12,
+  },
+  modalTitleStatusValue: {
+    fontWeight: '700',
+    color: '#000',
   },
 }); 
