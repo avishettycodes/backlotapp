@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,6 +11,7 @@ import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import SwipeDeck from './src/components/SwipeDeck';
 import Garage from './src/components/Garage';
 import Submit from './src/components/Submit';
+import SettingsModal from './src/components/SettingsModal';
 
 export type RootTabParamList = {
   Home: undefined;
@@ -19,6 +20,23 @@ export type RootTabParamList = {
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
+
+// Settings Context
+interface SettingsContextType {
+  isSettingsVisible: boolean;
+  openSettings: () => void;
+  closeSettings: () => void;
+}
+
+const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
+
+export const useSettings = () => {
+  const context = useContext(SettingsContext);
+  if (!context) {
+    throw new Error('useSettings must be used within a SettingsProvider');
+  }
+  return context;
+};
 
 // Settings button component for the header
 function SettingsButton({ onPress }: { onPress: () => void }) {
@@ -44,6 +62,7 @@ function SettingsButton({ onPress }: { onPress: () => void }) {
 function TabNavigator() {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
+  const { openSettings } = useSettings();
   
   return (
     <Tab.Navigator
@@ -104,7 +123,7 @@ function TabNavigator() {
         component={SwipeDeck} 
         options={{
           title: 'Home',
-          headerRight: () => <SettingsButton onPress={() => {}} />,
+          headerRight: () => <SettingsButton onPress={openSettings} />,
         }}
       />
       <Tab.Screen 
@@ -112,7 +131,7 @@ function TabNavigator() {
         component={Garage} 
         options={{
           title: 'My Garage',
-          headerRight: () => <SettingsButton onPress={() => {}} />,
+          headerRight: () => <SettingsButton onPress={openSettings} />,
         }}
       />
       <Tab.Screen 
@@ -120,7 +139,7 @@ function TabNavigator() {
         component={Submit} 
         options={{
           title: 'Submit a Car',
-          headerRight: () => <SettingsButton onPress={() => {}} />,
+          headerRight: () => <SettingsButton onPress={openSettings} />,
         }}
       />
     </Tab.Navigator>
@@ -129,16 +148,28 @@ function TabNavigator() {
 
 function AppContent() {
   const { isDark } = useTheme();
+  const [isSettingsVisible, setIsSettingsVisible] = useState(false);
+  
+  const openSettings = () => setIsSettingsVisible(true);
+  const closeSettings = () => setIsSettingsVisible(false);
   
   return (
-    <View style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <NavigationContainer>
-          <TabNavigator />
-          <StatusBar style={isDark ? "light" : "dark"} />
-        </NavigationContainer>
-      </SafeAreaProvider>
-    </View>
+    <SettingsContext.Provider value={{ isSettingsVisible, openSettings, closeSettings }}>
+      <View style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <NavigationContainer>
+            <TabNavigator />
+            <StatusBar style={isDark ? "light" : "dark"} />
+          </NavigationContainer>
+        </SafeAreaProvider>
+        
+        {/* Global Settings Modal */}
+        <SettingsModal
+          visible={isSettingsVisible}
+          onClose={closeSettings}
+        />
+      </View>
+    </SettingsContext.Provider>
   );
 }
 

@@ -15,7 +15,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Swiper from 'react-native-deck-swiper';
 import CarDetailModal from './CarDetailModal';
-import SettingsModal from './SettingsModal';
 import { Car } from '../types/car';
 import { useGarageStore } from '../store/garageStore';
 import { useSwipeQueueStore } from '../store/swipeQueueStore';
