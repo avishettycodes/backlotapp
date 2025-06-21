@@ -56,13 +56,16 @@ const Garage = () => {
     setSelectedCar(null);
   };
 
-  const handleRemoveFromGarage = (carId: number) => {
+  const handleRemoveFromGarage = (carId: string) => {
     console.log('Removing car from garage:', carId);
     removeFromGarage(carId);
-    const carToRemove = garageCars.find(car => car.id === carId);
-    if (carToRemove) {
-      addToQueue(carToRemove);
-  }
+    let carToReturn = garageCars.find(car => car.id === carId);
+    if (!carToReturn && selectedCar && selectedCar.id === carId) {
+      carToReturn = selectedCar;
+    }
+    if (carToReturn) {
+      addToQueue(carToReturn);
+    }
   };
 
   const renderCarCard = ({ item: car }: { item: Car }) => (

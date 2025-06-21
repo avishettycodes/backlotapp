@@ -24,7 +24,7 @@ interface CarDetailModalProps {
   car: Car | null;
   onClose: () => void;
   isInGarage?: boolean;
-  onRemoveFromGarage?: (carId: number) => void;
+  onRemoveFromGarage?: (carId: string) => void;
 }
 
 export default function CarDetailModal({ 
@@ -53,7 +53,7 @@ export default function CarDetailModal({
 
   const handleRemoveFromGarage = () => {
     if (onRemoveFromGarage && car) {
-      onRemoveFromGarage(car.id);
+      onRemoveFromGarage(String(car.id));
     }
     onClose();
   };
