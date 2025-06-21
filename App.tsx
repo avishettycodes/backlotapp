@@ -103,7 +103,7 @@ function TabNavigator() {
         name="Home" 
         component={SwipeDeck} 
         options={{
-          title: 'Backlot',
+          title: 'Home',
           headerRight: () => <SettingsButton onPress={() => {}} />,
         }}
       />
