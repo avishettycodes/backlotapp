@@ -59,8 +59,8 @@ const Garage = () => {
   const handleRemoveFromGarage = (carId: string) => {
     console.log('Removing car from garage:', carId);
     removeFromGarage(carId);
-    let carToReturn = garageCars.find(car => car.id === carId);
-    if (!carToReturn && selectedCar && selectedCar.id === carId) {
+    let carToReturn = garageCars.find(car => String(car.id) === carId);
+    if (!carToReturn && selectedCar && String(selectedCar.id) === carId) {
       carToReturn = selectedCar;
     }
     if (carToReturn) {
@@ -98,7 +98,7 @@ const Garage = () => {
         <TouchableOpacity
           style={styles.actionButton}
           activeOpacity={0.8}
-          onPress={() => handleRemoveFromGarage(car.id)}
+          onPress={() => handleRemoveFromGarage(String(car.id))}
         >
           <Ionicons name="trash-outline" size={scaledSize(24)} color={colors.error} />
         </TouchableOpacity>
@@ -119,7 +119,7 @@ const Garage = () => {
           <FlatList
             data={garageCars}
             renderItem={renderCarCard}
-            keyExtractor={(item) => item.id.toString()}
+            keyExtractor={(item) => String(item.id)}
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
