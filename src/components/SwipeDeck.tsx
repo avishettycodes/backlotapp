@@ -237,73 +237,76 @@ export default function SwipeDeck() {
 
       {/* Swiper Component */}
       <View style={styles.swiperContainer}>
-        <Swiper
-          cards={allCars}
-          renderCard={renderCard}
-          onSwipedLeft={(cardIndex) => handleSwipe('left', cardIndex)}
-          onSwipedRight={(cardIndex) => handleSwipe('right', cardIndex)}
-          cardIndex={0}
-          stackSize={3}
-          backgroundColor="transparent"
-          animateOverlayLabelsOpacity
-          overlayLabels={{
-            left: {
-              title: 'NOPE',
-              style: {
-                label: {
-                  fontSize: scaledFontSize(20),
-                  fontWeight: 'bold',
-                  color: colors.textInverse,
-                  borderWidth: 3,
-                  borderColor: colors.swipeNope,
-                  borderStyle: 'solid',
-                  paddingHorizontal: scaledSize(12),
-                  paddingVertical: scaledSize(6),
-                  borderRadius: scaledSize(2),
-                  backgroundColor: colors.swipeNope,
-                  textShadowColor: 'rgba(0,0,0,0.2)',
-                  textShadowOffset: { width: 1, height: 1 },
-                  textShadowRadius: 1,
-                },
-                wrapper: {
-                  position: 'absolute',
-                  top: scaledSize(20),
-                  right: scaledSize(20),
-                  alignItems: 'flex-end',
-                  zIndex: 10,
-                },
-              },
-            },
-            right: {
-              title: 'SAVE',
-              style: {
-                label: {
-                  fontSize: scaledFontSize(20),
-                  fontWeight: 'bold',
-                  color: colors.textInverse,
-                  borderWidth: 3,
-                  borderColor: colors.swipeSave,
-                  borderStyle: 'solid',
-                  paddingHorizontal: scaledSize(12),
-                  paddingVertical: scaledSize(6),
-                  borderRadius: scaledSize(2),
-                  backgroundColor: colors.swipeSave,
-                  textShadowColor: 'rgba(0,0,0,0.2)',
-                  textShadowOffset: { width: 1, height: 1 },
-                  textShadowRadius: 1,
-                },
-                wrapper: {
-                  position: 'absolute',
-                  top: scaledSize(20),
-                  left: scaledSize(20),
-                  alignItems: 'flex-start',
-                  zIndex: 10,
+        {allCars.length === 0 ? (
+          renderNoMoreCards()
+        ) : (
+          <Swiper
+            cards={allCars}
+            renderCard={renderCard}
+            onSwipedLeft={(cardIndex) => handleSwipe('left', cardIndex)}
+            onSwipedRight={(cardIndex) => handleSwipe('right', cardIndex)}
+            cardIndex={0}
+            stackSize={3}
+            backgroundColor="transparent"
+            animateOverlayLabelsOpacity
+            overlayLabels={{
+              left: {
+                title: 'NOPE',
+                style: {
+                  label: {
+                    fontSize: scaledFontSize(20),
+                    fontWeight: 'bold',
+                    color: colors.textInverse,
+                    borderWidth: 3,
+                    borderColor: colors.swipeNope,
+                    borderStyle: 'solid',
+                    paddingHorizontal: scaledSize(12),
+                    paddingVertical: scaledSize(6),
+                    borderRadius: scaledSize(2),
+                    backgroundColor: colors.swipeNope,
+                    textShadowColor: 'rgba(0,0,0,0.2)',
+                    textShadowOffset: { width: 1, height: 1 },
+                    textShadowRadius: 1,
+                  },
+                  wrapper: {
+                    position: 'absolute',
+                    top: scaledSize(20),
+                    right: scaledSize(20),
+                    alignItems: 'flex-end',
+                    zIndex: 10,
+                  },
                 },
               },
-            },
-          }}
-          onSwipedAll={renderNoMoreCards}
-        />
+              right: {
+                title: 'SAVE',
+                style: {
+                  label: {
+                    fontSize: scaledFontSize(20),
+                    fontWeight: 'bold',
+                    color: colors.textInverse,
+                    borderWidth: 3,
+                    borderColor: colors.swipeSave,
+                    borderStyle: 'solid',
+                    paddingHorizontal: scaledSize(12),
+                    paddingVertical: scaledSize(6),
+                    borderRadius: scaledSize(2),
+                    backgroundColor: colors.swipeSave,
+                    textShadowColor: 'rgba(0,0,0,0.2)',
+                    textShadowOffset: { width: 1, height: 1 },
+                    textShadowRadius: 1,
+                  },
+                  wrapper: {
+                    position: 'absolute',
+                    top: scaledSize(20),
+                    left: scaledSize(20),
+                    alignItems: 'flex-start',
+                    zIndex: 10,
+                  },
+                },
+              },
+            }}
+          />
+        )}
       </View>
 
       {/* Car Detail Modal */}
