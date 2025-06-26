@@ -33,7 +33,7 @@ export const Colors = {
     // Tab bar colors - Always black
     tabBar: 'rgba(0, 0, 0, 0.9)',
     tabBarText: 'rgba(255, 255, 255, 0.6)',
-    tabBarActive: '#3b82f6',
+    tabBarActive: 'rgba(255, 255, 255, 0.9)',
     
     // Swipe colors
     swipeSave: '#34C759',
@@ -80,7 +80,7 @@ export const Colors = {
     // Tab bar colors - Always black
     tabBar: 'rgba(0, 0, 0, 0.9)',
     tabBarText: 'rgba(255, 255, 255, 0.6)',
-    tabBarActive: '#60a5fa',
+    tabBarActive: 'rgba(255, 255, 255, 0.9)',
     
     // Swipe colors
     swipeSave: '#34C759',

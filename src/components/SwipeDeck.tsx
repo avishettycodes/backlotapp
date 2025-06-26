@@ -7,142 +7,53 @@ import {
   Dimensions,
   StatusBar,
   TouchableOpacity,
-  Alert,
-  FlatList,
+  Animated,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import Swiper from 'react-native-deck-swiper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import Swiper from 'react-native-deck-swiper';
 import CarDetailModal from './CarDetailModal';
 import { Car } from '../types/car';
 import { useGarageStore } from '../store/garageStore';
-import { useSwipeQueueStore } from '../store/swipeQueueStore';
+import { useSwipeQueueStore, initialCars } from '../store/swipeQueueStore';
 import { useTheme } from '../context/ThemeContext';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+// Card dimensions
+const CARD_WIDTH = SCREEN_WIDTH * 0.9;
+const CARD_HEIGHT = SCREEN_HEIGHT * 0.65;
 
 // Responsive scaling factors
 const scale = Math.min(SCREEN_WIDTH / 375, SCREEN_HEIGHT / 812);
 const scaledFontSize = (size: number) => size * scale;
 const scaledSize = (size: number) => size * scale;
 
-// Sample car data
-const sampleCars: Car[] = [
-  {
-    id: 1,
-    year: 2020,
-    make: "Toyota",
-    model: "Camry",
-    price: 35000,
-    mileage: 45000,
-    location: "San Ramon, CA",
-    image: "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-    images: [
-      "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-      "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-      "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-      "https://images.unsplash.com/photo-1563720223185-11003d516935?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
-    ],
-    description: "Well maintained Toyota Camry with low mileage and excellent condition.",
-    sellerName: "John Doe",
-    listedDate: "2024-12-15",
-    priceRating: "Great Deal",
-    deal: "good",
-    exteriorColor: "Blue",
-    interiorColor: "Black",
-    transmission: "Automatic",
-    fuelType: "Gasoline",
-    trim: "SE",
-    seats: 5,
-    pros: ["Reliable", "Comfortable", "Good fuel economy"],
-    cons: ["Expensive to maintain", "Small trunk space"],
-    titleStatus: "Clean"
-  },
-  {
-    id: 2,
-    year: 2021,
-    make: "Honda",
-    model: "Civic",
-    price: 28000,
-    mileage: 32000,
-    location: "Pleasanton, CA",
-    image: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-    images: [
-      "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-      "https://images.unsplash.com/photo-1563720223185-11003d516935?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-      "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
-    ],
-    description: "Sporty Honda Civic with great fuel economy and modern features.",
-    sellerName: "Jane Smith",
-    listedDate: "2024-12-10",
-    priceRating: "Fair Price",
-    deal: "fair",
-    exteriorColor: "Red",
-    interiorColor: "Gray",
-    transmission: "Automatic",
-    fuelType: "Gasoline",
-    trim: "Sport",
-    seats: 5,
-    pros: ["Sporty handling", "Great fuel economy", "Modern features"],
-    cons: ["Small back seats", "Firm ride"],
-    titleStatus: "Salvage"
-  },
-  {
-    id: 3,
-    year: 2019,
-    make: "BMW",
-    model: "3 Series",
-    price: 42000,
-    mileage: 38000,
-    location: "Danville, CA",
-    image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-    images: [
-      "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-      "https://images.unsplash.com/photo-1563720223185-11003d516935?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-      "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-      "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
-    ],
-    description: "Luxury BMW 3 Series with premium features and excellent performance.",
-    sellerName: "Mike Johnson",
-    listedDate: "2024-12-05",
-    priceRating: "Great Deal",
-    deal: "good",
-    exteriorColor: "White",
-    interiorColor: "Black",
-    transmission: "Automatic",
-    fuelType: "Gasoline",
-    trim: "330i",
-    seats: 5,
-    pros: ["Luxury features", "Excellent performance", "Premium interior"],
-    cons: ["Expensive maintenance", "High insurance costs"],
-    titleStatus: "Rebuilt"
-  }
-];
-
 export default function SwipeDeck() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCar, setSelectedCar] = useState<Car | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const { colors, isDark } = useTheme();
   
   const { addToGarage, clearGarage } = useGarageStore();
-  const { carQueue, addToQueue, removeFromQueue, clearQueue } = useSwipeQueueStore();
-  const insets = useSafeAreaInsets();
+  const { carQueue, addToQueue, removeFromQueue, clearQueue, initializeQueue } = useSwipeQueueStore();
 
-  // Development mode: Reset stores on component mount
+  // Development mode: Reset stores on component mount and initialize with new cars
   useEffect(() => {
     if (__DEV__) {
       console.log('🔄 Development mode: Resetting app state');
       clearGarage();
       clearQueue();
+      
+      // Initialize queue with new cars from the store
+      console.log('🔄 Development mode: Initializing queue with new cars');
+      initializeQueue(initialCars);
     }
-  }, [clearGarage, clearQueue]);
+  }, [clearGarage, clearQueue, initializeQueue]);
 
-  // Combine sample cars with queue cars, prioritizing queue cars
-  const allCars = [...carQueue, ...sampleCars];
-
-  const handleSwipe = (direction: 'left' | 'right', cardIndex: number) => {
-    const car = allCars[cardIndex];
+  const handleSwipe = (direction: 'left' | 'right') => {
+    const car = carQueue[currentIndex];
     console.log(`Swipe ${direction} completed for car:`, car);
     
     // Remove the car from the queue if it was in the queue
@@ -157,6 +68,9 @@ export default function SwipeDeck() {
       console.log('Adding car to queue...');
       addToQueue(car);
     }
+    
+    // Move to next card
+    setCurrentIndex(prev => prev + 1);
   };
 
   const handleCardPress = (car: Car) => {
@@ -165,43 +79,139 @@ export default function SwipeDeck() {
     setModalVisible(true);
   };
 
-  const renderCard = (car: Car, cardIndex: number) => {
+  const renderCard = (car: Car, isBlurred = false) => {
     return (
-      <View style={styles.cardContainer}>
-        {/* Background cards for stack effect */}
-        <View style={[styles.backgroundCard, styles.backgroundCard1]} />
-        <View style={[styles.backgroundCard, styles.backgroundCard2]} />
-        <View style={[styles.backgroundCard, styles.backgroundCard3]} />
+      <TouchableOpacity
+        style={[
+          styles.card, 
+          { backgroundColor: colors.card },
+          isBlurred && styles.blurredCardContainer
+        ]}
+        activeOpacity={0.9}
+        onPress={() => handleCardPress(car)}
+      >
+        <Image 
+          source={{ uri: car.image }} 
+          style={[
+            styles.cardImage,
+            isBlurred && { opacity: 0.8 }
+          ]} 
+        />
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.9)']}
+          style={styles.gradientOverlay}
+          locations={[0.6, 1]}
+        />
         
-        <TouchableOpacity
-          style={[styles.card, { backgroundColor: colors.card }]}
-          activeOpacity={0.9}
-          onPress={() => handleCardPress(car)}
-        >
-          <Image source={{ uri: car.image }} style={styles.cardImage} />
-          <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.8)']}
-            style={styles.gradientOverlay}
-            locations={[0.7, 1]}
-          />
-          
-          <View style={styles.cardContent}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.carTitle}>
-                {car.year} {car.make} {car.model}
-              </Text>
-              <Text style={[styles.carPrice, { color: colors.primary }]}>
-                ${car.price?.toLocaleString()}
-              </Text>
-            </View>
-            <Text style={styles.carSubtitle}>
-              {car.mileage?.toLocaleString()} mi • {car.location}
+        <View style={styles.cardContent}>
+          <View style={styles.cardHeader}>
+            <Text style={[
+              styles.carTitle,
+              isBlurred && styles.blurredText
+            ]}>
+              {car.year} {car.make} {car.model}
             </Text>
-            <Text style={styles.carTitleStatus}>
-              {car.titleStatus || 'Clean'} Title
+            <Text style={[
+              styles.carPrice, 
+              { color: colors.primary },
+              isBlurred && styles.blurredText
+            ]}>
+              ${car.price?.toLocaleString()}
             </Text>
           </View>
-        </TouchableOpacity>
+          <Text style={[
+            styles.carSubtitle,
+            isBlurred && styles.blurredText
+          ]}>
+            {car.mileage?.toLocaleString()} mi • {car.location}
+          </Text>
+          <Text style={[
+            styles.carTitleStatus,
+            isBlurred && styles.blurredText
+          ]}>
+            {car.titleStatus || 'Clean'} Title
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderCardStack = () => {
+    if (carQueue.length === 0) {
+      return renderNoMoreCards();
+    }
+
+    const currentCar = carQueue[currentIndex];
+    const nextCar = carQueue[currentIndex + 1];
+
+    return (
+      <View style={styles.cardStackContainer}>
+        {/* Background card (next card) - positioned behind */}
+        {nextCar && (
+          <View style={styles.backgroundCard}>
+            {renderCard(nextCar, true)}
+          </View>
+        )}
+        
+        {/* Foreground card (current card) */}
+        <View style={styles.foregroundCard}>
+          <Swiper
+            cards={[currentCar]}
+            cardIndex={0}
+            stackSize={1}
+            backgroundColor="transparent"
+            cardVerticalMargin={0}
+            cardHorizontalMargin={0}
+            containerStyle={styles.swiperContainerStyle}
+            renderCard={(car: Car) => (
+              <View style={styles.cardWrapper}>
+                {renderCard(car, false)}
+              </View>
+            )}
+            onSwipedLeft={() => handleSwipe('left')}
+            onSwipedRight={() => handleSwipe('right')}
+            overlayLabels={{
+              left: {
+                title: 'NOPE',
+                style: {
+                  label: {
+                    backgroundColor: 'rgba(255,0,0,0.8)',
+                    color: 'white',
+                    fontSize: 32,
+                    padding: 10,
+                    borderRadius: 8,
+                  },
+                  wrapper: {
+                    flexDirection: 'column',
+                    alignItems: 'flex-end',
+                    justifyContent: 'flex-start',
+                    marginLeft: -20,
+                    marginTop: 20,
+                  },
+                },
+              },
+              right: {
+                title: 'SAVE',
+                style: {
+                  label: {
+                    backgroundColor: 'rgba(0,200,0,0.8)',
+                    color: 'white',
+                    fontSize: 32,
+                    padding: 10,
+                    borderRadius: 8,
+                  },
+                  wrapper: {
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
+                    justifyContent: 'flex-start',
+                    marginLeft: 20,
+                    marginTop: 20,
+                  },
+                },
+              },
+            }}
+          />
+        </View>
       </View>
     );
   };
@@ -217,13 +227,22 @@ export default function SwipeDeck() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]} edges={['top']}>
+    <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       
+      {/* Full Screen Container for Gradient */}
+      <View style={styles.fullScreenContainer}>
+        <LinearGradient
+          colors={['#1a1a1a', '#000000', '#000000']}
+          style={styles.fullScreenGradient}
+          locations={[0, 0.7, 1]}
+        />
+      </View>
+      
       {/* Background Blur Effect - Only show in dark mode */}
-      {isDark && allCars.length > 0 && (
+      {isDark && carQueue.length > 0 && (
         <Image
-          source={{ uri: allCars[0].image }}
+          source={{ uri: carQueue[currentIndex]?.image }}
           style={styles.backgroundImage}
           blurRadius={35}
         />
@@ -234,79 +253,13 @@ export default function SwipeDeck() {
         <View style={[styles.darkOverlay, { backgroundColor: colors.backdrop }]} />
       )}
 
-      {/* Swiper Component */}
-      <View style={styles.swiperContainer}>
-        {allCars.length === 0 ? (
-          renderNoMoreCards()
-        ) : (
-          <Swiper
-            cards={allCars}
-            renderCard={renderCard}
-            onSwipedLeft={(cardIndex) => handleSwipe('left', cardIndex)}
-            onSwipedRight={(cardIndex) => handleSwipe('right', cardIndex)}
-            cardIndex={0}
-            stackSize={3}
-            backgroundColor="transparent"
-            animateOverlayLabelsOpacity
-            overlayLabels={{
-              left: {
-                title: 'NOPE',
-                style: {
-                  label: {
-                    fontSize: scaledFontSize(20),
-                    fontWeight: 'bold',
-                    color: colors.textInverse,
-                    borderWidth: 3,
-                    borderColor: colors.swipeNope,
-                    borderStyle: 'solid',
-                    paddingHorizontal: scaledSize(12),
-                    paddingVertical: scaledSize(6),
-                    borderRadius: scaledSize(2),
-                    backgroundColor: colors.swipeNope,
-                    textShadowColor: 'rgba(0,0,0,0.2)',
-                    textShadowOffset: { width: 1, height: 1 },
-                    textShadowRadius: 1,
-                  },
-                  wrapper: {
-                    position: 'absolute',
-                    top: scaledSize(20),
-                    right: scaledSize(20),
-                    alignItems: 'flex-end',
-                    zIndex: 10,
-                  },
-                },
-              },
-              right: {
-                title: 'SAVE',
-                style: {
-                  label: {
-                    fontSize: scaledFontSize(20),
-                    fontWeight: 'bold',
-                    color: colors.textInverse,
-                    borderWidth: 3,
-                    borderColor: colors.swipeSave,
-                    borderStyle: 'solid',
-                    paddingHorizontal: scaledSize(12),
-                    paddingVertical: scaledSize(6),
-                    borderRadius: scaledSize(2),
-                    backgroundColor: colors.swipeSave,
-                    textShadowColor: 'rgba(0,0,0,0.2)',
-                    textShadowOffset: { width: 1, height: 1 },
-                    textShadowRadius: 1,
-                  },
-                  wrapper: {
-                    position: 'absolute',
-                    top: scaledSize(20),
-                    left: scaledSize(20),
-                    alignItems: 'flex-start',
-                    zIndex: 10,
-                  },
-                },
-              },
-            }}
-          />
-        )}
-      </View>
+      {/* Safe area for content only */}
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+        {/* Card Stack */}
+        <View style={styles.swiperContainer}>
+          {renderCardStack()}
+        </View>
+      </SafeAreaView>
 
       {/* Car Detail Modal */}
       <CarDetailModal
@@ -318,147 +271,195 @@ export default function SwipeDeck() {
         }}
         isInGarage={false}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    position: 'relative',
+    backgroundColor: '#000000',
   },
   backgroundImage: {
-    ...StyleSheet.absoluteFillObject,
-    opacity: 0.3,
-  },
-  swiperContainer: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: scaledSize(16),
-    paddingTop: scaledSize(120),
-    paddingBottom: scaledSize(120),
-  },
-  cardContainer: {
-    position: 'relative',
-    width: SCREEN_WIDTH * 0.88,
-    height: SCREEN_HEIGHT * 0.68,
-  },
-  card: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#fff',
-    borderRadius: scaledSize(20),
+  },
+  darkOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.3,
+  },
+  safeArea: {
+    flex: 1,
+    position: 'relative',
+  },
+  swiperContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  swiperContainerStyle: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    height: '100%',
+  },
+  cardWrapper: {
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    borderRadius: 25,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 8,
     },
-    shadowOpacity: 0.2,
-    shadowRadius: 15,
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
     elevation: 8,
+  },
+  card: {
+    flex: 1,
+    borderRadius: 25,
+    overflow: 'hidden',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
   },
   cardImage: {
     width: '100%',
     height: '100%',
-    resizeMode: 'contain',
-    borderRadius: scaledSize(20),
+    resizeMode: 'cover',
+    borderRadius: 25,
   },
   gradientOverlay: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    height: '40%',
+    height: '50%',
   },
   cardContent: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    padding: scaledSize(24),
+    padding: scaledSize(20),
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
     marginBottom: scaledSize(8),
-    gap: scaledSize(8),
   },
   carTitle: {
-    fontSize: scaledFontSize(22),
+    fontSize: scaledFontSize(24),
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#FFFFFF',
     flex: 1,
-    flexShrink: 1,
+    marginRight: scaledSize(10),
   },
   carPrice: {
     fontSize: scaledFontSize(20),
     fontWeight: 'bold',
+    color: '#FFFFFF',
   },
   carSubtitle: {
     fontSize: scaledFontSize(16),
-    color: '#fff',
+    color: '#FFFFFF',
     opacity: 0.9,
+    marginBottom: scaledSize(4),
   },
   carTitleStatus: {
-    fontSize: scaledFontSize(12),
-    color: '#fff',
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-    marginTop: scaledSize(4),
+    fontSize: scaledFontSize(14),
+    color: '#FFFFFF',
+    opacity: 0.8,
   },
   noMoreCards: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: scaledSize(40),
+    paddingHorizontal: scaledSize(40),
   },
   noMoreCardsText: {
     fontSize: scaledFontSize(24),
     fontWeight: 'bold',
-    color: '#fff',
-    marginTop: scaledSize(16),
-    marginBottom: scaledSize(8),
+    marginTop: scaledSize(20),
+    marginBottom: scaledSize(10),
+    textAlign: 'center',
   },
   noMoreCardsSubtext: {
     fontSize: scaledFontSize(16),
     textAlign: 'center',
-    marginTop: scaledSize(8),
+    lineHeight: scaledFontSize(24),
   },
-  darkOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+  cardStackContainer: {
+    flex: 1,
+    position: 'relative',
+    alignItems: 'center',
+    width: '100%',
+    height: '100%',
+    marginTop: scaledSize(20),
+    justifyContent: 'center',
   },
   backgroundCard: {
     position: 'absolute',
-    width: SCREEN_WIDTH * 0.88,
-    height: SCREEN_HEIGHT * 0.68,
-    borderRadius: scaledSize(20),
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    top: '50%',
+    left: '50%',
+    width: CARD_WIDTH - scaledSize(10),
+    height: CARD_HEIGHT - scaledSize(20),
+    borderRadius: 25,
+    transform: [
+      { translateX: -(CARD_WIDTH - scaledSize(10)) / 2 },
+      { translateY: -(CARD_HEIGHT - scaledSize(20)) / 2 + scaledSize(10) },
+      { scale: 0.95 }
+    ],
   },
-  backgroundCard1: {
-    top: scaledSize(4),
-    backgroundColor: 'rgba(0,0,0,0.05)',
+  foregroundCard: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    borderRadius: 25,
+    transform: [
+      { translateX: -CARD_WIDTH / 2 },
+      { translateY: -CARD_HEIGHT / 2 }
+    ],
   },
-  backgroundCard2: {
-    top: scaledSize(8),
-    backgroundColor: 'rgba(0,0,0,0.1)',
+  blurredCardContainer: {
+    opacity: 0.8,
   },
-  backgroundCard3: {
-    top: scaledSize(12),
-    backgroundColor: 'rgba(0,0,0,0.15)',
+  blurredText: {
+    opacity: 0.8,
+  },
+  fullScreenContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
+  },
+  fullScreenGradient: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
   },
 }); 

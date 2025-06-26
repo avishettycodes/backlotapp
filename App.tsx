@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Platform, View, TouchableOpacity } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 
 // Import your actual components
@@ -89,10 +90,14 @@ function TabNavigator() {
         tabBarActiveTintColor: colors.tabBarActive,
         tabBarInactiveTintColor: colors.tabBarText,
         tabBarStyle: {
-          backgroundColor: colors.tabBar,
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
           borderTopWidth: 0,
+          borderTopColor: 'transparent',
+          borderWidth: 0,
           elevation: 0,
           shadowOpacity: 0,
+          shadowOffset: { width: 0, height: 0 },
+          shadowRadius: 0,
           height: Platform.OS === 'ios' ? 60 + insets.bottom : 60,
           paddingBottom: Platform.OS === 'ios' ? insets.bottom : 8,
           paddingTop: 8,
@@ -155,7 +160,7 @@ function AppContent() {
   
   return (
     <SettingsContext.Provider value={{ isSettingsVisible, openSettings, closeSettings }}>
-      <View style={{ flex: 1 }}>
+      <GestureHandlerRootView style={{ flex: 1, backgroundColor: 'transparent' }}>
         <SafeAreaProvider>
           <NavigationContainer>
             <TabNavigator />
@@ -168,7 +173,7 @@ function AppContent() {
           visible={isSettingsVisible}
           onClose={closeSettings}
         />
-      </View>
+      </GestureHandlerRootView>
     </SettingsContext.Provider>
   );
 }
