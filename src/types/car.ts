@@ -10,6 +10,7 @@ export interface Car {
   location?: string
   priceRating?: string
   sellerName?: string
+  sellerContact?: string
   title?: string
   transmission?: string
   listedDate?: string
