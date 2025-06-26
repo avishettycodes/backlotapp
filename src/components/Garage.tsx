@@ -20,7 +20,7 @@ import SettingsModal from './SettingsModal';
 import { useTheme } from '../context/ThemeContext';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const CARD_WIDTH = SCREEN_WIDTH - 32; // Full width minus padding
+const CARD_WIDTH = SCREEN_WIDTH * 0.75; // 75% of screen width for compact cards
 
 // Responsive scaling factors
 const scale = Math.min(SCREEN_WIDTH / 375, SCREEN_HEIGHT / 812);
@@ -77,32 +77,31 @@ const Garage = () => {
       >
         <Image source={{ uri: car.image }} style={styles.image} />
         <View style={styles.cardContent}>
-          <Text style={[styles.title, { color: colors.text }]}>
+          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
             {car.year} {car.make} {car.model}
           </Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]} numberOfLines={1}>
             {car.mileage?.toLocaleString()} mi · {car.location}
           </Text>
           <Text style={[styles.price, { color: colors.primary }]}>${car.price?.toLocaleString()}</Text>
         </View>
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={styles.actionButton}
+            activeOpacity={0.8}
+            onPress={() => Alert.alert('Message Seller', 'This feature is coming soon!')}
+          >
+            <Ionicons name="chatbubble-outline" size={scaledSize(20)} color={colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.actionButton}
+            activeOpacity={0.8}
+            onPress={() => handleRemoveFromGarage(String(car.id))}
+          >
+            <Ionicons name="trash-outline" size={scaledSize(20)} color={colors.error} />
+          </TouchableOpacity>
+        </View>
       </TouchableOpacity>
-
-      <View style={[styles.actionButtons, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          activeOpacity={0.8}
-          onPress={() => Alert.alert('Message Seller', 'This feature is coming soon!')}
-        >
-          <Ionicons name="chatbubble-outline" size={scaledSize(24)} color={colors.primary} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.actionButton}
-          activeOpacity={0.8}
-          onPress={() => handleRemoveFromGarage(String(car.id))}
-        >
-          <Ionicons name="trash-outline" size={scaledSize(24)} color={colors.error} />
-        </TouchableOpacity>
-      </View>
     </View>
   );
 
@@ -121,7 +120,6 @@ const Garage = () => {
             renderItem={renderCarCard}
             keyExtractor={(item) => String(item.id)}
             horizontal
-            pagingEnabled
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.listContent}
             snapToInterval={CARD_WIDTH + 16} // Card width + padding
@@ -171,6 +169,7 @@ const styles = StyleSheet.create({
     marginRight: scaledSize(16),
   },
   card: {
+    flexDirection: 'row',
     borderRadius: scaledSize(12),
     overflow: 'hidden',
     borderWidth: 1,
@@ -182,35 +181,39 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+    height: scaledSize(120), // Compact height
   },
   image: {
-    width: '100%',
-    height: scaledSize(200),
+    width: scaledSize(160), // Fixed width for image
+    height: '100%',
   },
   cardContent: {
-    padding: scaledSize(16),
+    flex: 1,
+    padding: scaledSize(12),
+    justifyContent: 'space-between',
   },
   title: {
-    fontSize: scaledFontSize(18),
+    fontSize: scaledFontSize(16),
     fontWeight: 'bold',
     marginBottom: scaledSize(4),
   },
   subtitle: {
-    fontSize: scaledFontSize(14),
-    marginBottom: scaledSize(8),
+    fontSize: scaledFontSize(12),
+    marginBottom: scaledSize(4),
   },
   price: {
-    fontSize: scaledFontSize(16),
+    fontSize: scaledFontSize(14),
     fontWeight: 'bold',
   },
   actionButtons: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     justifyContent: 'space-around',
-    padding: scaledSize(16),
-    borderTopWidth: 1,
+    padding: scaledSize(8),
+    width: scaledSize(40),
   },
   actionButton: {
-    padding: scaledSize(8),
+    padding: scaledSize(4),
+    alignItems: 'center',
   },
   listContent: {
     paddingHorizontal: scaledSize(16),

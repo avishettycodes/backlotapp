@@ -306,6 +306,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: scaledSize(20),
   },
   swiperContainerStyle: {
     flex: 1,
@@ -412,10 +413,9 @@ const styles = StyleSheet.create({
     flex: 1,
     position: 'relative',
     alignItems: 'center',
+    justifyContent: 'center',
     width: '100%',
     height: '100%',
-    marginTop: scaledSize(20),
-    justifyContent: 'center',
   },
   backgroundCard: {
     position: 'absolute',
@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     transform: [
       { translateX: -(CARD_WIDTH - scaledSize(10)) / 2 },
-      { translateY: -(CARD_HEIGHT - scaledSize(20)) / 2 + scaledSize(10) },
+      { translateY: -(CARD_HEIGHT - scaledSize(20)) / 2 },
       { scale: 0.95 }
     ],
   },
