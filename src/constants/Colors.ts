@@ -1,26 +1,26 @@
 export const Colors = {
   light: {
     // Background colors
-    background: '#ffffff',
+    background: '#fafbfc',
     surface: '#ffffff',
     card: '#ffffff',
     modal: '#ffffff',
     
     // Text colors
-    text: '#1f2937',
+    text: '#1a1a1a',
     textSecondary: '#6b7280',
     textTertiary: '#9ca3af',
     textInverse: '#ffffff',
     
-    // Primary colors
-    primary: '#3b82f6',
-    primaryLight: '#eff6ff',
+    // Primary colors - More vibrant blue
+    primary: '#2563eb',
+    primaryLight: '#dbeafe',
     primaryDark: '#1d4ed8',
     
-    // Status colors
-    success: '#10b981',
-    warning: '#f59e0b',
-    error: '#ef4444',
+    // Status colors - More vibrant
+    success: '#059669',
+    warning: '#d97706',
+    error: '#dc2626',
     
     // Border colors
     border: '#e5e7eb',
@@ -30,68 +30,80 @@ export const Colors = {
     overlay: 'rgba(0, 0, 0, 0.5)',
     backdrop: 'rgba(0, 0, 0, 0.6)',
     
-    // Tab bar colors - Always black
-    tabBar: 'rgba(0, 0, 0, 0.9)',
-    tabBarText: 'rgba(255, 255, 255, 0.6)',
-    tabBarActive: 'rgba(255, 255, 255, 0.9)',
+    // Tab bar colors - More modern gradient
+    tabBar: 'rgba(255, 255, 255, 0.95)',
+    tabBarText: 'rgba(107, 114, 128, 0.8)',
+    tabBarActive: '#2563eb',
     
-    // Swipe colors
-    swipeSave: '#34C759',
-    swipeNope: '#FF3B30',
+    // Swipe colors - More vibrant
+    swipeSave: '#059669',
+    swipeNope: '#dc2626',
     
     // Settings colors
     settingsSection: '#6b7280',
     settingsItem: '#ffffff',
     settingsItemBorder: '#f3f4f6',
-    settingsIcon: '#3b82f6',
-    settingsIconBg: '#eff6ff',
+    settingsIcon: '#2563eb',
+    settingsIconBg: '#dbeafe',
+    
+    // New gradient colors
+    gradientStart: '#667eea',
+    gradientEnd: '#764ba2',
+    cardGradientStart: '#ffffff',
+    cardGradientEnd: '#f8fafc',
   },
   dark: {
-    // Background colors
-    background: '#000000',
-    surface: '#1f2937',
-    card: '#374151',
-    modal: '#1f2937',
+    // Background colors - More sophisticated
+    background: '#0f172a',
+    surface: '#1e293b',
+    card: '#334155',
+    modal: '#1e293b',
     
     // Text colors
-    text: '#f9fafb',
-    textSecondary: '#d1d5db',
-    textTertiary: '#9ca3af',
-    textInverse: '#1f2937',
+    text: '#f8fafc',
+    textSecondary: '#cbd5e1',
+    textTertiary: '#94a3b8',
+    textInverse: '#0f172a',
     
-    // Primary colors
-    primary: '#60a5fa',
+    // Primary colors - More vibrant
+    primary: '#3b82f6',
     primaryLight: '#1e3a8a',
-    primaryDark: '#3b82f6',
+    primaryDark: '#1d4ed8',
     
-    // Status colors
-    success: '#34d399',
-    warning: '#fbbf24',
-    error: '#f87171',
+    // Status colors - More vibrant
+    success: '#10b981',
+    warning: '#f59e0b',
+    error: '#ef4444',
     
     // Border colors
-    border: '#4b5563',
-    borderLight: '#374151',
+    border: '#475569',
+    borderLight: '#334155',
     
     // Overlay colors
     overlay: 'rgba(0, 0, 0, 0.7)',
     backdrop: 'rgba(0, 0, 0, 0.8)',
     
-    // Tab bar colors - Always black
-    tabBar: 'rgba(0, 0, 0, 0.9)',
-    tabBarText: 'rgba(255, 255, 255, 0.6)',
-    tabBarActive: 'rgba(255, 255, 255, 0.9)',
+    // Tab bar colors - More sophisticated
+    tabBar: 'rgba(15, 23, 42, 0.95)',
+    tabBarText: 'rgba(148, 163, 184, 0.8)',
+    tabBarActive: '#3b82f6',
     
-    // Swipe colors
-    swipeSave: '#34C759',
-    swipeNope: '#FF3B30',
+    // Swipe colors - More vibrant
+    swipeSave: '#10b981',
+    swipeNope: '#ef4444',
     
     // Settings colors
-    settingsSection: '#9ca3af',
-    settingsItem: '#374151',
-    settingsItemBorder: '#4b5563',
-    settingsIcon: '#60a5fa',
+    settingsSection: '#94a3b8',
+    settingsItem: '#334155',
+    settingsItemBorder: '#475569',
+    settingsIcon: '#3b82f6',
     settingsIconBg: '#1e3a8a',
+    
+    // New gradient colors
+    gradientStart: '#4f46e5',
+    gradientEnd: '#7c3aed',
+    cardGradientStart: '#334155',
+    cardGradientEnd: '#1e293b',
   },
 };
 

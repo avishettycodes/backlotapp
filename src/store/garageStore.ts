@@ -4,7 +4,7 @@ import { Car } from '../types/car'
 interface GarageStore {
   cars: Car[]
   addToGarage: (car: Car) => void
-  removeFromGarage: (carId: string) => void
+  removeFromGarage: (carId: string | number) => void
   clearGarage: () => void
 }
 
@@ -25,20 +25,20 @@ export const useGarageStore = create<GarageStore>((set) => ({
     set((state) => {
       const isAlreadyInGarage = state.cars.some((existingCar) => String(existingCar.id) === String(car.id))
       if (isAlreadyInGarage) {
-        console.log('Car already in garage, skipping...')
+        if (__DEV__) console.log('Car already in garage, skipping...')
         return state
       }
-      console.log('Adding car to garage:', car)
+      if (__DEV__) console.log('Adding car to garage:', car)
       return { cars: [...state.cars, car] }
     })
   },
-  removeFromGarage: (carId: string) => {
+  removeFromGarage: (carId: string | number) => {
     set((state) => ({
-      cars: state.cars.filter((car) => String(car.id) !== carId),
+      cars: state.cars.filter((car) => String(car.id) !== String(carId)),
     }))
   },
   clearGarage: () => {
-    console.log('Clearing garage...')
+    if (__DEV__) console.log('Clearing garage...')
     set({ cars: [] })
   },
 })) 

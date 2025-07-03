@@ -17,14 +17,23 @@ import { Formik, Field } from 'formik';
 import * as Yup from 'yup';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../context/ThemeContext';
 import { useSwipeQueueStore } from '../store/swipeQueueStore';
 import { Car } from '../types/car';
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const scale = Math.min(SCREEN_WIDTH, SCREEN_HEIGHT) / 375;
-const scaledFontSize = (size: number) => size * scale;
-const scaledSize = (size: number) => size * scale;
+import { TextStyles } from '../constants/Typography';
+import { 
+  SCREEN_WIDTH, 
+  SCREEN_HEIGHT, 
+  scaledSize, 
+  scaledFontSize, 
+  SPACING, 
+  BORDER_RADIUS,
+  BUTTON,
+  INPUT,
+  CONTENT_PADDING,
+  ICON_SIZES
+} from '../constants/Layout';
 
 // Form validation schema
 const validationSchema = Yup.object({
@@ -32,6 +41,10 @@ const validationSchema = Yup.object({
   make: Yup.string().required('Make is required'),
   model: Yup.string().required('Model is required'),
   trim: Yup.string(),
+  vin: Yup.string()
+    .length(17, 'VIN must be exactly 17 characters')
+    .matches(/^[A-HJ-NPR-Z0-9]{17}$/, 'VIN must contain only valid characters (no I, O, Q)')
+    .required('VIN is required'),
   mileage: Yup.number().min(0).required('Mileage is required'),
   transmission: Yup.string().oneOf(['Automatic', 'Manual', 'CVT']).required('Transmission is required'),
   fuelType: Yup.string().oneOf(['Gasoline', 'Diesel', 'Hybrid', 'Electric']).required('Fuel type is required'),
@@ -55,6 +68,7 @@ const initialValues = {
   make: '',
   model: '',
   trim: '',
+  vin: '',
   mileage: '',
   transmission: '',
   fuelType: '',
@@ -77,7 +91,7 @@ const fuelTypeOptions = ['Gasoline', 'Diesel', 'Hybrid', 'Electric'];
 const titleStatusOptions = ['Clean', 'Salvage', 'Rebuilt', 'Lien'];
 
 export default function Submit() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { initializeQueue } = useSwipeQueueStore();
@@ -144,6 +158,7 @@ export default function Submit() {
         make: values.make,
         model: values.model,
         trim: values.trim,
+        vin: values.vin,
         mileage: parseInt(values.mileage),
         transmission: values.transmission,
         fuelType: values.fuelType,
@@ -153,6 +168,7 @@ export default function Submit() {
         titleStatus: values.titleStatus,
         location: values.location,
         price: parseInt(values.price),
+        priceRating: 'Fair',
         image: values.images[0] || '',
         images: values.images,
         description: values.description,
@@ -161,6 +177,7 @@ export default function Submit() {
         sellerName: values.sellerName,
         sellerContact: values.sellerContact,
         listedDate: new Date().toISOString(),
+        deal: 'fair', // Default deal rating
       };
 
       // Add to queue (simulating API call)
@@ -176,29 +193,16 @@ export default function Submit() {
     }
   };
 
-  const renderStepIndicator = () => (
-    <View style={styles.stepIndicator}>
-      <Text style={[styles.stepText, { color: colors.text }]}>
-        Step {currentStep} of {totalSteps}
-      </Text>
-      <View style={styles.progressBar}>
-        <View 
-          style={[
-            styles.progressFill, 
-            { 
-              width: `${(currentStep / totalSteps) * 100}%`,
-              backgroundColor: colors.primary 
-            }
-          ]} 
-        />
-      </View>
-    </View>
-  );
-
   const renderBasicInfo = (values: any, setFieldValue: any, errors: any, touched: any) => (
     <View style={styles.step}>
-      <Text style={[styles.stepTitle, { color: colors.text }]}>Basic Information</Text>
-      
+      <View style={styles.stepHeader}>
+        <Text style={[styles.stepTitle, { color: colors.text }]}>
+          Basic Information
+        </Text>
+        <Text style={[styles.stepCounter, { color: colors.textSecondary }]}>
+          {currentStep} of {totalSteps}
+        </Text>
+      </View>
       <View style={styles.inputGroup}>
         <Text style={[styles.label, { color: colors.text }]}>Year *</Text>
         <TextInput
@@ -284,12 +288,46 @@ export default function Submit() {
           accessibilityLabel="Car trim"
         />
       </View>
+
+      <View style={styles.inputGroup}>
+        <Text style={[styles.label, { color: colors.text }]}>VIN Number *</Text>
+        <TextInput
+          style={[
+            styles.input,
+            { 
+              backgroundColor: colors.card,
+              borderColor: errors.vin && touched.vin ? colors.error : colors.border,
+              color: colors.text 
+            }
+          ]}
+          value={values.vin}
+          onChangeText={(text) => setFieldValue('vin', text.toUpperCase())}
+          placeholder="1HGBH41JXMN109186"
+          placeholderTextColor={colors.textSecondary}
+          maxLength={17}
+          autoCapitalize="characters"
+          accessibilityLabel="Vehicle identification number"
+        />
+        {errors.vin && touched.vin && (
+          <Text style={[styles.errorText, { color: colors.error }]}>{errors.vin}</Text>
+        )}
+        <Text style={[styles.helpText, { color: colors.textSecondary }]}>
+          Enter the 17-character VIN from your vehicle registration or title
+        </Text>
+      </View>
     </View>
   );
 
   const renderSpecs = (values: any, setFieldValue: any, errors: any, touched: any) => (
     <View style={styles.step}>
-      <Text style={[styles.stepTitle, { color: colors.text }]}>Specifications</Text>
+      <View style={styles.stepHeader}>
+        <Text style={[styles.stepTitle, { color: colors.text }]}>
+          Specifications
+        </Text>
+        <Text style={[styles.stepCounter, { color: colors.textSecondary }]}>
+          {currentStep} of {totalSteps}
+        </Text>
+      </View>
       
       <View style={styles.inputGroup}>
         <Text style={[styles.label, { color: colors.text }]}>Mileage *</Text>
@@ -471,7 +509,14 @@ export default function Submit() {
 
   const renderLocationPrice = (values: any, setFieldValue: any, errors: any, touched: any) => (
     <View style={styles.step}>
-      <Text style={[styles.stepTitle, { color: colors.text }]}>Location & Price</Text>
+      <View style={styles.stepHeader}>
+        <Text style={[styles.stepTitle, { color: colors.text }]}>
+          Location & Price
+        </Text>
+        <Text style={[styles.stepCounter, { color: colors.textSecondary }]}>
+          {currentStep} of {totalSteps}
+        </Text>
+      </View>
       
       <View style={styles.inputGroup}>
         <Text style={[styles.label, { color: colors.text }]}>Location *</Text>
@@ -531,7 +576,9 @@ export default function Submit() {
 
   const renderPhotosDescription = (values: any, setFieldValue: any, errors: any, touched: any) => (
     <View style={styles.step}>
-      <Text style={[styles.stepTitle, { color: colors.text }]}>Photos & Description</Text>
+      <Text style={[styles.stepTitle, { color: colors.text, marginBottom: scaledSize(24) }]}>
+        Photos & Description <Text style={[styles.stepCounter, { color: colors.textSecondary }]}>({currentStep}/{totalSteps})</Text>
+      </Text>
       
       <View style={styles.inputGroup}>
         <Text style={[styles.label, { color: colors.text }]}>Photos *</Text>
@@ -671,7 +718,9 @@ export default function Submit() {
 
   const renderSellerInfo = (values: any, setFieldValue: any, errors: any, touched: any) => (
     <View style={styles.step}>
-      <Text style={[styles.stepTitle, { color: colors.text }]}>Seller Information</Text>
+      <Text style={[styles.stepTitle, { color: colors.text, marginBottom: scaledSize(24) }]}>
+        Seller Information <Text style={[styles.stepCounter, { color: colors.textSecondary }]}>({currentStep}/{totalSteps})</Text>
+      </Text>
       
       <View style={styles.inputGroup}>
         <Text style={[styles.label, { color: colors.text }]}>Seller Name *</Text>
@@ -723,13 +772,23 @@ export default function Submit() {
 
   const renderReview = (values: any) => (
     <View style={styles.step}>
-      <Text style={[styles.stepTitle, { color: colors.text }]}>Review & Submit</Text>
+      <View style={styles.stepHeader}>
+        <Text style={[styles.stepTitle, { color: colors.text }]}>
+          Review & Submit
+        </Text>
+        <Text style={[styles.stepCounter, { color: colors.textSecondary }]}>
+          {currentStep} of {totalSteps}
+        </Text>
+      </View>
       
       <ScrollView style={styles.reviewContainer}>
         <View style={[styles.reviewCard, { backgroundColor: colors.card }]}>
           <Text style={[styles.reviewSectionTitle, { color: colors.text }]}>Basic Information</Text>
           <Text style={[styles.reviewText, { color: colors.text }]}>
             {values.year} {values.make} {values.model} {values.trim}
+          </Text>
+          <Text style={[styles.reviewText, { color: colors.text }]}>
+            VIN: {values.vin}
           </Text>
           
           <Text style={[styles.reviewSectionTitle, { color: colors.text }]}>Specifications</Text>
@@ -804,7 +863,7 @@ export default function Submit() {
   const getStepErrors = (errors: any, touched: any) => {
     switch (currentStep) {
       case 1:
-        return !!(errors.year && touched.year) || !!(errors.make && touched.make) || !!(errors.model && touched.model);
+        return !!(errors.year && touched.year) || !!(errors.make && touched.make) || !!(errors.model && touched.model) || !!(errors.vin && touched.vin);
       case 2:
         return !!(errors.mileage && touched.mileage) || !!(errors.transmission && touched.transmission) || 
                !!(errors.fuelType && touched.fuelType) || !!(errors.seats && touched.seats) || 
@@ -822,7 +881,7 @@ export default function Submit() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#FFFFFF' }]}>
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}
@@ -830,8 +889,6 @@ export default function Submit() {
       >
         {({ values, setFieldValue, errors, touched, handleSubmit, isValid }) => (
           <>
-            {renderStepIndicator()}
-            
             <ScrollView 
               style={styles.scrollView}
               contentContainerStyle={styles.scrollContent}
@@ -842,7 +899,7 @@ export default function Submit() {
               {currentStep === 5 && renderReview(values)}
             </ScrollView>
 
-            <View style={[styles.navigation, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+            <View style={[styles.navigation, { backgroundColor: isDark ? '#0F172A' : '#FFFFFF', borderTopColor: colors.border }]}>
               {currentStep > 1 && (
                 <TouchableOpacity
                   style={[styles.navButton, styles.backButton, { borderColor: colors.border }]}
@@ -906,74 +963,102 @@ export default function Submit() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  stepIndicator: {
-    paddingHorizontal: scaledSize(20),
-    paddingVertical: scaledSize(16),
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  stepText: {
-    fontSize: scaledFontSize(16),
-    fontWeight: '600',
-    marginBottom: scaledSize(8),
+    padding: 0,
+    margin: 0,
   },
   progressBar: {
-    height: scaledSize(4),
-    backgroundColor: '#e0e0e0',
-    borderRadius: scaledSize(2),
+    height: scaledSize(6),
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    borderRadius: BORDER_RADIUS.sm,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    borderRadius: scaledSize(2),
+    borderRadius: BORDER_RADIUS.sm,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: scaledSize(100),
+    flexGrow: 1,
+    paddingBottom: CONTENT_PADDING.bottom,
+    paddingTop: 0,
+    padding: 0,
+    margin: 0,
   },
   step: {
-    padding: scaledSize(20),
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.lg,
+    paddingTop: SPACING.md,
+  },
+  stepHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    marginBottom: SPACING.lg,
+    paddingBottom: SPACING.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
   },
   stepTitle: {
-    fontSize: scaledFontSize(24),
-    fontWeight: 'bold',
-    marginBottom: scaledSize(24),
+    ...TextStyles.heading2,
+    flex: 1,
+  },
+  stepCounter: {
+    ...TextStyles.caption,
+    fontWeight: '500',
+    letterSpacing: 1,
+    fontSize: scaledFontSize(12),
   },
   inputGroup: {
-    marginBottom: scaledSize(20),
+    marginBottom: SPACING.md + SPACING.xs,
   },
   label: {
-    fontSize: scaledFontSize(16),
-    fontWeight: '600',
-    marginBottom: scaledSize(8),
+    ...TextStyles.label,
+    marginBottom: SPACING.sm,
+    textTransform: 'uppercase',
   },
   input: {
-    height: scaledSize(48),
-    borderWidth: 1,
-    borderRadius: scaledSize(8),
-    paddingHorizontal: scaledSize(16),
-    fontSize: scaledFontSize(16),
+    ...TextStyles.bodyLarge,
+    height: INPUT.height,
+    borderWidth: INPUT.borderWidth,
+    borderRadius: INPUT.borderRadius,
+    paddingHorizontal: INPUT.paddingHorizontal,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   textArea: {
+    ...TextStyles.bodyMedium,
     height: scaledSize(100),
-    borderWidth: 1,
-    borderRadius: scaledSize(8),
-    paddingHorizontal: scaledSize(16),
-    paddingVertical: scaledSize(12),
-    fontSize: scaledFontSize(16),
+    borderWidth: INPUT.borderWidth,
+    borderRadius: INPUT.borderRadius,
+    paddingHorizontal: INPUT.paddingHorizontal,
+    paddingVertical: INPUT.paddingVertical,
     textAlignVertical: 'top',
   },
   charCount: {
-    fontSize: scaledFontSize(12),
+    ...TextStyles.caption,
     textAlign: 'right',
     marginTop: scaledSize(4),
+    letterSpacing: 0.5,
   },
   errorText: {
-    fontSize: scaledFontSize(12),
+    ...TextStyles.caption,
     marginTop: scaledSize(4),
+    fontWeight: '500',
+    letterSpacing: 0.5,
+  },
+  helpText: {
+    ...TextStyles.bodySmall,
+    marginTop: scaledSize(4),
+    fontStyle: 'italic',
+    letterSpacing: 0.3,
   },
   row: {
     flexDirection: 'row',
@@ -981,19 +1066,28 @@ const styles = StyleSheet.create({
   optionsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: scaledSize(8),
+    gap: SPACING.sm,
   },
   optionButton: {
-    paddingHorizontal: scaledSize(16),
-    paddingVertical: scaledSize(12),
-    borderRadius: scaledSize(8),
+    paddingHorizontal: BUTTON.paddingHorizontal,
+    paddingVertical: BUTTON.paddingVertical,
+    borderRadius: BUTTON.borderRadius,
     borderWidth: 1,
     minWidth: scaledSize(100),
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   optionText: {
-    fontSize: scaledFontSize(14),
-    fontWeight: '500',
+    ...TextStyles.button,
+    fontSize: scaledFontSize(13),
+    textTransform: 'uppercase',
   },
   priceEstimate: {
     flexDirection: 'row',
@@ -1005,8 +1099,9 @@ const styles = StyleSheet.create({
     gap: scaledSize(8),
   },
   priceEstimateText: {
-    fontSize: scaledFontSize(14),
-    fontWeight: '500',
+    ...TextStyles.monospace,
+    fontWeight: '600',
+    letterSpacing: 0.5,
   },
   uploadButton: {
     flexDirection: 'row',
@@ -1017,8 +1112,8 @@ const styles = StyleSheet.create({
     gap: scaledSize(8),
   },
   uploadButtonText: {
-    fontSize: scaledFontSize(16),
-    fontWeight: '600',
+    ...TextStyles.button,
+    textTransform: 'uppercase',
   },
   imageContainer: {
     marginBottom: scaledSize(20),
@@ -1049,12 +1144,12 @@ const styles = StyleSheet.create({
     gap: scaledSize(8),
   },
   proConInput: {
+    ...TextStyles.bodyMedium,
     flex: 1,
     height: scaledSize(40),
     borderWidth: 1,
     borderRadius: scaledSize(8),
     paddingHorizontal: scaledSize(12),
-    fontSize: scaledFontSize(14),
   },
   removeProConButton: {
     width: scaledSize(32),
@@ -1073,8 +1168,9 @@ const styles = StyleSheet.create({
     gap: scaledSize(8),
   },
   addProConText: {
-    fontSize: scaledFontSize(14),
-    fontWeight: '500',
+    ...TextStyles.accent,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   reviewContainer: {
     maxHeight: scaledSize(400),
@@ -1086,15 +1182,15 @@ const styles = StyleSheet.create({
     borderColor: '#e0e0e0',
   },
   reviewSectionTitle: {
-    fontSize: scaledFontSize(18),
-    fontWeight: 'bold',
+    ...TextStyles.heading3,
     marginTop: scaledSize(16),
     marginBottom: scaledSize(8),
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   reviewText: {
-    fontSize: scaledFontSize(16),
+    ...TextStyles.bodyMedium,
     marginBottom: scaledSize(4),
-    lineHeight: scaledSize(24),
   },
   navigation: {
     flexDirection: 'row',
@@ -1102,7 +1198,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: scaledSize(20),
     paddingVertical: scaledSize(16),
-    borderTopWidth: 1,
+    borderTopWidth: 0,
     position: 'absolute',
     bottom: 0,
     left: 0,
@@ -1131,7 +1227,8 @@ const styles = StyleSheet.create({
     marginLeft: scaledSize(12),
   },
   navButtonText: {
-    fontSize: scaledFontSize(16),
-    fontWeight: '600',
+    ...TextStyles.button,
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
   },
 }); 

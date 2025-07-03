@@ -5,22 +5,23 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Platform, Dimensions } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import SwipeDeck from './components/SwipeDeck';
 import Garage from './components/Garage';
 import Submit from './components/Submit';
+import { TAB_BAR, scaledSize } from './constants/Layout';
 
 const Tab = createBottomTabNavigator();
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
-
-// Responsive scaling factors
-const scale = Math.min(SCREEN_WIDTH / 375, SCREEN_HEIGHT / 812);
-const scaledSize = (size: number) => size * scale;
 
 function TabNavigator() {
   const insets = useSafeAreaInsets();
   
+  // Calculate proper tab bar height with safe area
+  const tabBarHeight = TAB_BAR.height + insets.bottom;
+  
   return (
     <Tab.Navigator
+      id={undefined}
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap;
@@ -35,30 +36,44 @@ function TabNavigator() {
             iconName = 'help-outline';
           }
 
-          return <Ionicons name={iconName} size={size} color={color} />;
+          return (
+            <Ionicons 
+              name={iconName} 
+              size={focused ? TAB_BAR.iconSizeFocused : TAB_BAR.iconSize} 
+              color={color} 
+            />
+          );
         },
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: '#8E8E93',
+        tabBarActiveTintColor: '#FF6B6B',
+        tabBarInactiveTintColor: '#6b7280',
         tabBarStyle: {
           position: 'absolute',
           bottom: 0,
           left: 0,
           right: 0,
-          height: Platform.OS === 'ios' ? scaledSize(100) + insets.bottom + scaledSize(20) : scaledSize(80) + insets.bottom,
-          backgroundColor: '#fff',
+          height: tabBarHeight,
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
           borderTopWidth: 1,
-          borderTopColor: '#e0e0e0',
+          borderTopColor: 'rgba(0, 0, 0, 0.1)',
           elevation: 12,
-          shadowOpacity: 0.2,
+          shadowOpacity: 0.08,
           shadowRadius: 12,
-          shadowOffset: { width: 0, height: -4 },
-          paddingBottom: Platform.OS === 'ios' ? insets.bottom + scaledSize(20) : insets.bottom,
-          paddingTop: scaledSize(12),
+          shadowOffset: { width: 0, height: -3 },
+          paddingBottom: insets.bottom,
+          paddingTop: TAB_BAR.paddingVertical,
+          paddingHorizontal: TAB_BAR.paddingHorizontal,
+          borderTopLeftRadius: TAB_BAR.borderRadius,
+          borderTopRightRadius: TAB_BAR.borderRadius,
         },
         tabBarLabelStyle: {
-          fontSize: scaledSize(12),
-          fontWeight: '500',
+          fontSize: TAB_BAR.fontSize,
+          fontWeight: '600',
           marginTop: scaledSize(4),
+          letterSpacing: 0.5,
+        },
+        tabBarItemStyle: {
+          paddingVertical: TAB_BAR.paddingVertical,
+          marginHorizontal: scaledSize(4),
         },
         headerShown: false,
       })}
@@ -67,21 +82,21 @@ function TabNavigator() {
         name="Home" 
         component={SwipeDeck}
         options={{
-          title: 'Home',
+          title: 'Discover',
         }}
       />
       <Tab.Screen 
         name="Garage" 
         component={Garage}
         options={{
-          title: 'Garage',
+          title: 'My Garage',
         }}
       />
       <Tab.Screen 
         name="Submit" 
         component={Submit}
         options={{
-          title: 'Submit',
+          title: 'List Car',
         }}
       />
     </Tab.Navigator>

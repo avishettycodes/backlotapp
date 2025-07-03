@@ -18,17 +18,23 @@ import { Car } from '../types/car';
 import { useGarageStore } from '../store/garageStore';
 import { useSwipeQueueStore, initialCars } from '../store/swipeQueueStore';
 import { useTheme } from '../context/ThemeContext';
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+import { TextStyles } from '../constants/Typography';
+import { 
+  SCREEN_WIDTH, 
+  SCREEN_HEIGHT, 
+  scaledSize, 
+  scaledFontSize, 
+  SPACING, 
+  BORDER_RADIUS,
+  CARD,
+  CARD_SHADOW,
+  CONTENT_PADDING,
+  ICON_SIZES
+} from '../constants/Layout';
 
 // Card dimensions
-const CARD_WIDTH = SCREEN_WIDTH * 0.9;
-const CARD_HEIGHT = SCREEN_HEIGHT * 0.65;
-
-// Responsive scaling factors
-const scale = Math.min(SCREEN_WIDTH / 375, SCREEN_HEIGHT / 812);
-const scaledFontSize = (size: number) => size * scale;
-const scaledSize = (size: number) => size * scale;
+const CARD_WIDTH = CARD.width;
+const CARD_HEIGHT = CARD.height;
 
 export default function SwipeDeck() {
   const [modalVisible, setModalVisible] = useState(false);
@@ -54,19 +60,19 @@ export default function SwipeDeck() {
 
   const handleSwipe = (direction: 'left' | 'right') => {
     const car = carQueue[currentIndex];
-    console.log(`Swipe ${direction} completed for car:`, car);
+    if (__DEV__) console.log(`Swipe ${direction} completed for car:`, car);
     
-    // Remove the car from the queue if it was in the queue
+    // Remove the car from the queue regardless of direction
     if (carQueue.some(c => c.id === car.id)) {
       removeFromQueue(car.id);
     }
     
     if (direction === 'right') {
-      console.log('Adding car to garage...');
+      if (__DEV__) console.log('Adding car to garage...');
       addToGarage(car);
     } else {
-      console.log('Adding car to queue...');
-      addToQueue(car);
+      if (__DEV__) console.log('Car dismissed (swiped left)');
+      // Left swipe = dismiss, don't add anywhere
     }
     
     // Move to next card
@@ -74,7 +80,7 @@ export default function SwipeDeck() {
   };
 
   const handleCardPress = (car: Car) => {
-    console.log('Card pressed! Opening modal for car:', car);
+    if (__DEV__) console.log('Card pressed! Opening modal for car:', car);
     setSelectedCar(car);
     setModalVisible(true);
   };
@@ -84,24 +90,44 @@ export default function SwipeDeck() {
       <TouchableOpacity
         style={[
           styles.card, 
-          { backgroundColor: colors.card },
-          isBlurred && styles.blurredCardContainer
+          { backgroundColor: colors.card }
         ]}
         activeOpacity={0.9}
         onPress={() => handleCardPress(car)}
       >
         <Image 
           source={{ uri: car.image }} 
-          style={[
-            styles.cardImage,
-            isBlurred && { opacity: 0.8 }
-          ]} 
+          style={styles.cardImage}
         />
         <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.9)']}
+          colors={['transparent', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.9)']}
           style={styles.gradientOverlay}
-          locations={[0.6, 1]}
+          locations={[0.4, 0.7, 1]}
         />
+        
+        {/* Price Badge */}
+        <View style={styles.priceBadge}>
+          <LinearGradient
+            colors={['#FF6B6B', '#FF8E53']}
+            style={styles.priceBadgeGradient}
+          >
+            <Text style={styles.priceBadgeText}>
+              ${car.price?.toLocaleString()}
+            </Text>
+          </LinearGradient>
+        </View>
+        
+        {/* Deal Rating Badge */}
+        {car.deal && (
+          <View style={[
+            styles.dealBadge,
+            { backgroundColor: car.deal === 'good' ? colors.success : car.deal === 'fair' ? colors.warning : colors.error }
+          ]}>
+            <Text style={styles.dealBadgeText}>
+              {car.deal === 'good' ? 'Great Deal' : car.deal === 'fair' ? 'Fair Price' : 'Overpriced'}
+            </Text>
+          </View>
+        )}
         
         <View style={styles.cardContent}>
           <View style={styles.cardHeader}>
@@ -111,13 +137,6 @@ export default function SwipeDeck() {
             ]}>
               {car.year} {car.make} {car.model}
             </Text>
-            <Text style={[
-              styles.carPrice, 
-              { color: colors.primary },
-              isBlurred && styles.blurredText
-            ]}>
-              ${car.price?.toLocaleString()}
-            </Text>
           </View>
           <Text style={[
             styles.carSubtitle,
@@ -125,12 +144,20 @@ export default function SwipeDeck() {
           ]}>
             {car.mileage?.toLocaleString()} mi • {car.location}
           </Text>
-          <Text style={[
-            styles.carTitleStatus,
-            isBlurred && styles.blurredText
-          ]}>
-            {car.titleStatus || 'Clean'} Title
-          </Text>
+          <View style={styles.carDetails}>
+            <Text style={[
+              styles.carTitleStatus,
+              isBlurred && styles.blurredText
+            ]}>
+              {car.titleStatus || 'Clean'} Title
+            </Text>
+            <Text style={[
+              styles.carTrim,
+              isBlurred && styles.blurredText
+            ]}>
+              {car.trim}
+            </Text>
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -219,7 +246,7 @@ export default function SwipeDeck() {
   const renderNoMoreCards = () => {
     return (
       <View style={styles.noMoreCards}>
-        <Ionicons name="car-outline" size={64} color={colors.textSecondary} />
+        <Ionicons name="car-outline" size={ICON_SIZES.xxl} color={colors.textSecondary} />
         <Text style={[styles.noMoreCardsText, { color: colors.text }]}>No more cars!</Text>
         <Text style={[styles.noMoreCardsSubtext, { color: colors.textSecondary }]}>Check back later for new listings</Text>
       </View>
@@ -240,9 +267,9 @@ export default function SwipeDeck() {
       </View>
       
       {/* Background Blur Effect - Only show in dark mode */}
-      {isDark && carQueue.length > 0 && (
+      {isDark && carQueue.length > 0 && carQueue[currentIndex] && (
         <Image
-          source={{ uri: carQueue[currentIndex]?.image }}
+          source={{ uri: carQueue[currentIndex].image }}
           style={styles.backgroundImage}
           blurRadius={35}
         />
@@ -289,7 +316,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: '100%',
     height: '100%',
-  },
+  } as const,
   darkOverlay: {
     position: 'absolute',
     top: 0,
@@ -306,7 +333,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: scaledSize(20),
+    paddingVertical: SPACING.lg,
+    paddingBottom: CONTENT_PADDING.bottom,
   },
   swiperContainerStyle: {
     flex: 1,
@@ -318,36 +346,28 @@ const styles = StyleSheet.create({
   cardWrapper: {
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
-    borderRadius: 25,
-    overflow: 'hidden',
+    borderRadius: CARD.borderRadius,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
   },
   card: {
     flex: 1,
-    borderRadius: 25,
-    overflow: 'hidden',
-    elevation: 8,
+    borderRadius: CARD.borderRadius,
+    overflow: 'hidden' as const,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
   },
   cardImage: {
     width: '100%',
     height: '100%',
     resizeMode: 'cover',
-    borderRadius: 25,
-  },
+  } as const,
   gradientOverlay: {
     position: 'absolute',
     bottom: 0,
@@ -360,7 +380,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    padding: scaledSize(20),
+    padding: scaledSize(16),
   },
   cardHeader: {
     flexDirection: 'row',
@@ -369,27 +389,27 @@ const styles = StyleSheet.create({
     marginBottom: scaledSize(8),
   },
   carTitle: {
-    fontSize: scaledFontSize(24),
-    fontWeight: 'bold',
+    ...TextStyles.carTitle,
     color: '#FFFFFF',
     flex: 1,
     marginRight: scaledSize(10),
   },
   carPrice: {
-    fontSize: scaledFontSize(20),
-    fontWeight: 'bold',
+    ...TextStyles.price,
     color: '#FFFFFF',
   },
   carSubtitle: {
-    fontSize: scaledFontSize(16),
+    ...TextStyles.bodyMedium,
     color: '#FFFFFF',
     opacity: 0.9,
     marginBottom: scaledSize(4),
   },
   carTitleStatus: {
-    fontSize: scaledFontSize(14),
+    ...TextStyles.caption,
     color: '#FFFFFF',
     opacity: 0.8,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   noMoreCards: {
     flex: 1,
@@ -398,16 +418,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: scaledSize(40),
   },
   noMoreCardsText: {
-    fontSize: scaledFontSize(24),
-    fontWeight: 'bold',
+    ...TextStyles.heading1,
     marginTop: scaledSize(20),
     marginBottom: scaledSize(10),
     textAlign: 'center',
   },
   noMoreCardsSubtext: {
-    fontSize: scaledFontSize(16),
+    ...TextStyles.bodyMedium,
     textAlign: 'center',
-    lineHeight: scaledFontSize(24),
+    opacity: 0.8,
   },
   cardStackContainer: {
     flex: 1,
@@ -461,5 +480,47 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
+  },
+  priceBadge: {
+    position: 'absolute',
+    top: scaledSize(12),
+    right: scaledSize(12),
+    zIndex: 10,
+  },
+  priceBadgeGradient: {
+    paddingHorizontal: scaledSize(12),
+    paddingVertical: scaledSize(8),
+    borderRadius: scaledSize(20),
+  },
+  priceBadgeText: {
+    ...TextStyles.accent,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+  },
+  dealBadge: {
+    position: 'absolute',
+    top: scaledSize(12),
+    left: scaledSize(12),
+    zIndex: 10,
+    paddingHorizontal: scaledSize(10),
+    paddingVertical: scaledSize(4),
+    borderRadius: scaledSize(12),
+  },
+  dealBadgeText: {
+    ...TextStyles.overline,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+  },
+  carDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: scaledSize(8),
+  },
+  carTrim: {
+    ...TextStyles.bodyMedium,
+    color: '#FFFFFF',
+    opacity: 0.8,
+    fontWeight: '500',
   },
 }); 

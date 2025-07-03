@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,18 +19,24 @@ import { Ionicons } from '@expo/vector-icons';
 import CarDetailModal from './CarDetailModal';
 import SettingsModal from './SettingsModal';
 import { useTheme } from '../context/ThemeContext';
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const CARD_WIDTH = SCREEN_WIDTH * 0.75; // 75% of screen width for compact cards
-
-// Responsive scaling factors
-const scale = Math.min(SCREEN_WIDTH / 375, SCREEN_HEIGHT / 812);
-const scaledFontSize = (size: number) => size * scale;
-const scaledSize = (size: number) => size * scale;
+import { TextStyles } from '../constants/Typography';
+import { 
+  SCREEN_WIDTH, 
+  SCREEN_HEIGHT, 
+  scaledSize, 
+  scaledFontSize, 
+  SPACING, 
+  BORDER_RADIUS,
+  CONTENT_PADDING,
+  ICON_SIZES,
+  CARD,
+  CARD_SHADOW
+} from '../constants/Layout';
 
 const Garage = () => {
   const [selectedCar, setSelectedCar] = useState<Car | null>(null)
   const [modalVisible, setModalVisible] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   
@@ -39,25 +46,27 @@ const Garage = () => {
 
   // Debug: Log garage state changes
   useEffect(() => {
-    console.log('Garage component mounted/updated')
-    console.log('Current garage cars:', garageCars)
-    console.log('Garage cars length:', garageCars.length)
+    if (__DEV__) {
+      console.log('Garage component mounted/updated')
+      console.log('Current garage cars:', garageCars)
+      console.log('Garage cars length:', garageCars.length)
+    }
   }, [garageCars])
 
   const openCarModal = (car: Car) => {
-    console.log('Opening modal for car:', car);
+    if (__DEV__) console.log('Opening modal for car:', car);
     setSelectedCar(car);
     setModalVisible(true);
   };
 
   const closeModal = () => {
-    console.log('Closing modal');
+    if (__DEV__) console.log('Closing modal');
     setModalVisible(false);
     setSelectedCar(null);
   };
 
   const handleRemoveFromGarage = (carId: string) => {
-    console.log('Removing car from garage:', carId);
+    if (__DEV__) console.log('Removing car from garage:', carId);
     removeFromGarage(carId);
     let carToReturn = garageCars.find(car => String(car.id) === carId);
     if (!carToReturn && selectedCar && String(selectedCar.id) === carId) {
@@ -68,66 +77,115 @@ const Garage = () => {
     }
   };
 
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  }, []);
+
   const renderCarCard = ({ item: car }: { item: Car }) => (
-    <View style={styles.cardContainer}>
-      <TouchableOpacity
-        style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
-        activeOpacity={0.8}
-        onPress={() => openCarModal(car)}
-      >
-        <Image source={{ uri: car.image }} style={styles.image} />
-        <View style={styles.cardContent}>
-          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
-            {car.year} {car.make} {car.model}
+    <TouchableOpacity
+      style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+      activeOpacity={0.8}
+      onPress={() => openCarModal(car)}
+    >
+      <Image source={{ uri: car.image }} style={styles.cardImage} />
+      <LinearGradient
+        colors={['transparent', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.6)']}
+        style={styles.imageGradient}
+        locations={[0.5, 0.8, 1]}
+      />
+      
+      {/* Price Badge */}
+      <View style={styles.priceBadge}>
+        <LinearGradient
+          colors={['#FF6B6B', '#FF8E53']}
+          style={styles.priceBadgeGradient}
+        >
+          <Text style={styles.priceBadgeText}>
+            ${car.price?.toLocaleString()}
           </Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]} numberOfLines={1}>
-            {car.mileage?.toLocaleString()} mi · {car.location}
+        </LinearGradient>
+      </View>
+      
+      {/* Deal Badge */}
+      {car.deal && (
+        <View style={[
+          styles.dealBadge,
+          { backgroundColor: car.deal === 'good' ? colors.success : car.deal === 'fair' ? colors.warning : colors.error }
+        ]}>
+          <Text style={styles.dealBadgeText}>
+            {car.deal === 'good' ? 'Great Deal' : car.deal === 'fair' ? 'Fair Price' : 'Overpriced'}
           </Text>
-          <Text style={[styles.price, { color: colors.primary }]}>${car.price?.toLocaleString()}</Text>
         </View>
-        <View style={styles.actionButtons}>
+      )}
+      
+      {/* Card Content */}
+      <View style={styles.cardContent}>
+        <Text style={[styles.title, { color: '#FFFFFF' }]} numberOfLines={1}>
+          {car.year} {car.make} {car.model}
+        </Text>
+        <Text style={[styles.subtitle, { color: '#FFFFFF' }]} numberOfLines={1}>
+          {car.mileage?.toLocaleString()} mi • {car.location}
+        </Text>
+        <View style={styles.cardDetails}>
+          <Text style={[styles.trim, { color: '#FFFFFF' }]} numberOfLines={1}>
+            {car.trim}
+          </Text>
           <TouchableOpacity
-            style={styles.actionButton}
-            activeOpacity={0.8}
-            onPress={() => Alert.alert('Message Seller', 'This feature is coming soon!')}
-          >
-            <Ionicons name="chatbubble-outline" size={scaledSize(20)} color={colors.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.actionButton}
-            activeOpacity={0.8}
+            style={styles.removeButton}
             onPress={() => handleRemoveFromGarage(String(car.id))}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Ionicons name="trash-outline" size={scaledSize(20)} color={colors.error} />
+            <Ionicons name="trash-outline" size={ICON_SIZES.sm} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
-      </TouchableOpacity>
-    </View>
+      </View>
+    </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]} edges={['top']}>
-      <View style={styles.content}>
-        {garageCars.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="car-outline" size={scaledSize(64)} color={colors.textTertiary} />
-            <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>Your garage is empty</Text>
-            <Text style={[styles.emptyStateSubtext, { color: colors.textTertiary }]}>Swipe right on cars to add them to your garage</Text>
-          </View>
-        ) : (
-          <FlatList
-            data={garageCars}
-            renderItem={renderCarCard}
-            keyExtractor={(item) => String(item.id)}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.listContent}
-            snapToInterval={CARD_WIDTH + 16} // Card width + padding
-            decelerationRate="fast"
-            snapToAlignment="center"
-          />
-        )}
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <View style={styles.header}>
+        <Text style={[styles.screenTitle, { color: colors.text }]}>My Garage</Text>
+        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
+          {garageCars.length} {garageCars.length === 1 ? 'car' : 'cars'} saved
+        </Text>
       </View>
+      
+      {garageCars.length === 0 ? (
+        <View style={styles.emptyState}>
+          <LinearGradient
+            colors={['#FF6B6B', '#FF8E53']}
+            style={styles.emptyStateIcon}
+          >
+            <Ionicons name="car-outline" size={ICON_SIZES.xxl} color="#fff" />
+          </LinearGradient>
+          <Text style={[styles.emptyStateText, { color: colors.text }]}>Your garage is empty</Text>
+          <Text style={[styles.emptyStateSubtext, { color: colors.textSecondary }]}>
+            Swipe right on cars to add them to your garage
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={garageCars}
+          renderItem={renderCarCard}
+          keyExtractor={(item) => String(item.id)}
+          numColumns={2}
+          contentContainerStyle={styles.listContent}
+          columnWrapperStyle={styles.row}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
+            />
+          }
+        />
+      )}
 
       {/* Car Detail Modal */}
       <CarDetailModal
@@ -145,78 +203,170 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  emptyStateIcon: {
+    width: scaledSize(120),
+    height: scaledSize(120),
+    borderRadius: scaledSize(60),
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: SPACING.lg,
+  },
   content: {
     flex: 1,
-    paddingHorizontal: scaledSize(16),
-    paddingTop: scaledSize(20),
+    paddingHorizontal: SPACING.md,
+    paddingTop: SPACING.md,
+    paddingBottom: CONTENT_PADDING.bottom, // Account for tab bar
   },
   emptyState: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: SPACING.lg,
   },
   emptyStateText: {
     fontSize: scaledFontSize(18),
-    marginTop: scaledSize(16),
-    marginBottom: scaledSize(8),
+    marginTop: SPACING.md,
+    marginBottom: SPACING.sm,
+    textAlign: 'center',
   },
   emptyStateSubtext: {
     fontSize: scaledFontSize(14),
     textAlign: 'center',
   },
-  cardContainer: {
-    width: CARD_WIDTH,
-    marginRight: scaledSize(16),
-  },
   card: {
-    flexDirection: 'row',
-    borderRadius: scaledSize(12),
+    width: (SCREEN_WIDTH - SPACING.md * 3) / 2,
+    height: scaledSize(220),
+    borderRadius: BORDER_RADIUS.lg,
     overflow: 'hidden',
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-    height: scaledSize(120), // Compact height
+    marginBottom: SPACING.md,
+    ...CARD_SHADOW,
   },
   image: {
-    width: scaledSize(160), // Fixed width for image
+    width: scaledSize(180), // Slightly wider image
     height: '100%',
   },
   cardContent: {
     flex: 1,
-    padding: scaledSize(12),
+    padding: SPACING.md,
     justifyContent: 'space-between',
   },
   title: {
-    fontSize: scaledFontSize(16),
+    ...TextStyles.bodyLarge,
     fontWeight: 'bold',
-    marginBottom: scaledSize(4),
+    marginBottom: SPACING.xs,
   },
   subtitle: {
     fontSize: scaledFontSize(12),
-    marginBottom: scaledSize(4),
+    marginBottom: SPACING.xs,
   },
-  price: {
-    fontSize: scaledFontSize(14),
+  priceBadge: {
+    padding: SPACING.xs,
+    borderRadius: BORDER_RADIUS.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  priceBadgeText: {
+    fontSize: scaledFontSize(12),
     fontWeight: 'bold',
+    color: '#fff',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  carDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  trim: {
+    fontSize: scaledFontSize(12),
+  },
+  titleStatus: {
+    fontSize: scaledFontSize(12),
   },
   actionButtons: {
     flexDirection: 'column',
     justifyContent: 'space-around',
-    padding: scaledSize(8),
+    padding: SPACING.sm,
     width: scaledSize(40),
   },
   actionButton: {
-    padding: scaledSize(4),
+    width: scaledSize(36),
+    height: scaledSize(36),
+    borderRadius: BORDER_RADIUS.round,
+    justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: SPACING.sm,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  imageGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
   },
   listContent: {
-    paddingHorizontal: scaledSize(16),
+    paddingHorizontal: SPACING.md,
+    paddingBottom: CONTENT_PADDING.bottom,
+  },
+  header: {
+    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.md,
+    paddingBottom: SPACING.md,
+  },
+  screenTitle: {
+    ...TextStyles.heading1,
+    marginBottom: SPACING.xs,
+  },
+  headerSubtitle: {
+    ...TextStyles.bodyMedium,
+  },
+  row: {
+    justifyContent: 'space-between',
+  },
+  cardImage: {
+    width: '100%',
+    height: '100%',
+  },
+  priceBadgeGradient: {
+    paddingHorizontal: scaledSize(8),
+    paddingVertical: scaledSize(4),
+    borderRadius: BORDER_RADIUS.lg,
+  },
+  dealBadge: {
+    position: 'absolute',
+    top: scaledSize(8),
+    left: scaledSize(8),
+    zIndex: 10,
+    paddingHorizontal: scaledSize(8),
+    paddingVertical: scaledSize(4),
+    borderRadius: BORDER_RADIUS.md,
+  },
+  dealBadgeText: {
+    fontSize: scaledFontSize(10),
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  cardDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: SPACING.xs,
+  },
+  removeButton: {
+    padding: scaledSize(4),
+    borderRadius: BORDER_RADIUS.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
 });
 

@@ -1,6 +1,44 @@
+/* Human-friendly professional fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Open+Sans:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700;800&family=Playfair+Display:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  /* Base typography for human-friendly reading */
+  body, html {
+    font-family: 'Open Sans', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 400;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Headings use Inter for professionalism */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+  }
+
+  /* Display text uses Playfair Display for elegance */
+  .font-display {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+
+  /* Accent text uses Poppins for friendliness */
+  .font-accent {
+    font-family: 'Poppins', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  /* Monospace text uses JetBrains Mono for clarity */
+  .font-mono {
+    font-family: 'JetBrains Mono', 'SF Mono', Consolas, Monaco, monospace;
+  }
+}
 
 @layer utilities {
   .swipe-success {

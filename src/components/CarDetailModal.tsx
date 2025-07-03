@@ -14,8 +14,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Car } from '../types/car';
 import { useTheme } from '../context/ThemeContext';
+import { TextStyles } from '../constants/Typography';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -125,7 +127,11 @@ export default function CarDetailModal({
                     setActiveIndex(index);
                   }}
                 />
-                <View style={styles.imageGradient} />
+                <LinearGradient
+                  colors={['transparent', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.7)']}
+                  style={styles.imageGradient}
+                  locations={[0.6, 0.8, 1]}
+                />
                 
                 {/* Carousel Dots */}
                 {images.length > 1 && (
@@ -159,12 +165,19 @@ export default function CarDetailModal({
                     </Text>
                   </View>
                   <View style={styles.headerRight}>
-                    {car.priceRating === 'Great Deal' && (
-                      <View style={[styles.dealBadge, { backgroundColor: colors.success }]}>
-                        <Text style={[styles.dealBadgeText, { color: colors.textInverse }]}>Great Deal</Text>
+                    {car.deal && (
+                      <View style={[
+                        styles.dealBadge,
+                        { backgroundColor: car.deal === 'good' ? colors.success : car.deal === 'fair' ? colors.warning : colors.error }
+                      ]}>
+                        <Text style={[styles.dealBadgeText, { color: colors.textInverse }]}>
+                          {car.deal === 'good' ? 'Great Deal' : car.deal === 'fair' ? 'Fair Price' : 'Overpriced'}
+                        </Text>
                       </View>
                     )}
-                    <Text style={[styles.price, { color: colors.primary }]}>${car.price?.toLocaleString()}</Text>
+                    <View style={styles.priceContainer}>
+                      <Text style={[styles.price, { color: colors.primary }]}>${car.price?.toLocaleString()}</Text>
+                    </View>
                   </View>
                 </View>
 
@@ -371,12 +384,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    ...TextStyles.carTitle,
     marginBottom: 4,
   },
   subtitle: {
-    fontSize: 16,
+    ...TextStyles.bodyLarge,
     marginBottom: 4,
   },
   listedDate: {
@@ -396,15 +408,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   price: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    ...TextStyles.price,
+  },
+  priceContainer: {
+    borderRadius: 12,
+    overflow: 'hidden',
   },
   section: {
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    ...TextStyles.heading3,
     marginBottom: 12,
   },
   sellerName: {
@@ -431,10 +445,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   specLabel: {
-    fontSize: 12,
+    ...TextStyles.overline,
     marginBottom: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   specValue: {
     fontSize: 14,

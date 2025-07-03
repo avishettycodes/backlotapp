@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import { TextStyles } from '../constants/Typography';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const scale = Math.min(SCREEN_WIDTH / 375, SCREEN_HEIGHT / 812);
@@ -114,7 +115,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
         { text: 'Cancel', style: 'cancel' },
         { text: 'Sign Out', style: 'destructive', onPress: () => {
           // Handle sign out logic here
-          console.log('User signed out');
+          if (__DEV__) console.log('User signed out');
         }},
       ]
     );
@@ -128,7 +129,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
         { text: 'Cancel', style: 'cancel' },
         { text: 'Clear', style: 'destructive', onPress: () => {
           // Handle clear history logic here
-          console.log('History cleared');
+          if (__DEV__) console.log('History cleared');
         }},
       ]
     );
@@ -137,7 +138,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
   const handleThemeSelection = (selectedTheme: 'light' | 'dark') => {
     setTheme(selectedTheme);
     setShowThemeModal(false);
-    console.log('Theme changed to:', selectedTheme);
+    if (__DEV__) console.log('Theme changed to:', selectedTheme);
   };
 
   const getThemeDisplayValue = (currentTheme: string) => {
@@ -447,8 +448,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   headerTitle: {
-    fontSize: scaledFontSize(20),
-    fontWeight: 'bold',
+    ...TextStyles.heading2,
   },
   closeButton: {
     padding: scaledSize(4),
@@ -460,12 +460,9 @@ const styles = StyleSheet.create({
     marginTop: scaledSize(24),
   },
   sectionTitle: {
-    fontSize: scaledFontSize(14),
-    fontWeight: '600',
+    ...TextStyles.overline,
     marginBottom: scaledSize(8),
     paddingHorizontal: scaledSize(16),
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   sectionContent: {
     borderTopWidth: 1,
@@ -496,19 +493,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   settingTitle: {
-    fontSize: scaledFontSize(16),
+    ...TextStyles.bodyLarge,
     fontWeight: '500',
     marginBottom: scaledSize(2),
   },
   settingSubtitle: {
-    fontSize: scaledFontSize(14),
+    ...TextStyles.bodyMedium,
   },
   settingItemRight: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   settingValue: {
-    fontSize: scaledFontSize(14),
+    ...TextStyles.bodyMedium,
     marginRight: scaledSize(8),
   },
   themeModalOverlay: {
@@ -529,8 +526,7 @@ const styles = StyleSheet.create({
     marginBottom: scaledSize(20),
   },
   themeModalTitle: {
-    fontSize: scaledFontSize(18),
-    fontWeight: 'bold',
+    ...TextStyles.heading3,
   },
   themeOption: {
     flexDirection: 'row',
@@ -545,12 +541,12 @@ const styles = StyleSheet.create({
     marginLeft: scaledSize(12),
   },
   themeOptionTitle: {
-    fontSize: scaledFontSize(16),
+    ...TextStyles.bodyLarge,
     fontWeight: '600',
     marginBottom: scaledSize(2),
   },
   themeOptionSubtitle: {
-    fontSize: scaledFontSize(14),
+    ...TextStyles.bodyMedium,
   },
 });
 
