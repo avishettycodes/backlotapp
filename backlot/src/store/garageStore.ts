@@ -16,6 +16,6 @@ export const useGarageStore = create<GarageStore>((set) => ({
     }),
   removeFromGarage: (carId) =>
     set((state) => ({
-      garageCars: state.garageCars.filter((car) => car.id !== carId),
+      garageCars: state.garageCars.filter((car) => car.id !== Number(carId)),
     })),
 })) 

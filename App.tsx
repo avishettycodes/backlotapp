@@ -66,8 +66,9 @@ function TabNavigator() {
   const { openSettings } = useSettings();
   
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
+            <Tab.Navigator
+          id={undefined}
+          screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
 

@@ -881,7 +881,7 @@ export default function Submit() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#FFFFFF' }]}>
+    <View style={[styles.container, { backgroundColor: isDark ? '#0F172A' : '#FFFFFF' }]}>
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}
@@ -899,7 +899,7 @@ export default function Submit() {
               {currentStep === 5 && renderReview(values)}
             </ScrollView>
 
-            <View style={[styles.navigation, { backgroundColor: isDark ? '#0F172A' : '#FFFFFF', borderTopColor: colors.border }]}>
+            <SafeAreaView style={[styles.navigation, { backgroundColor: isDark ? '#0F172A' : '#FFFFFF', borderTopColor: colors.border }]} edges={['bottom']}>
               {currentStep > 1 && (
                 <TouchableOpacity
                   style={[styles.navButton, styles.backButton, { borderColor: colors.border }]}
@@ -952,11 +952,11 @@ export default function Submit() {
                   )}
                 </TouchableOpacity>
               )}
-            </View>
+            </SafeAreaView>
           </>
         )}
       </Formik>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -982,7 +982,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingBottom: CONTENT_PADDING.bottom,
-    paddingTop: 0,
+    paddingTop: SPACING.lg,
     padding: 0,
     margin: 0,
   },
@@ -1198,11 +1198,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: scaledSize(20),
     paddingVertical: scaledSize(16),
-    borderTopWidth: 0,
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+    borderTopWidth: 1,
   },
   navButton: {
     flexDirection: 'row',

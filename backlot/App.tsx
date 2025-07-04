@@ -4,9 +4,9 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import SwipeDeck from './src/components/SwipeDeck';
-import Garage from './src/components/Garage';
-import Submit from './src/components/Submit';
+import SwipeDeck from '../src/components/SwipeDeck';
+import Garage from '../src/components/Garage';
+import Submit from '../src/components/Submit';
 
 export type RootTabParamList = {
   Home: undefined;

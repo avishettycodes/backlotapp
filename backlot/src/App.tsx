@@ -3,9 +3,9 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import SwipeDeck from './components/SwipeDeck';
-import Garage from './components/Garage';
-import Submit from './components/Submit';
+import SwipeDeck from '../../src/components/SwipeDeck';
+import Garage from '../../src/components/Garage';
+import Submit from '../../src/components/Submit';
 
 const Stack = createNativeStackNavigator();
 

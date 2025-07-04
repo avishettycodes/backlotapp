@@ -9,15 +9,12 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  Dimensions,
   Alert,
   RefreshControl,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import CarDetailModal from './CarDetailModal';
-import SettingsModal from './SettingsModal';
 import { useTheme } from '../context/ThemeContext';
 import { TextStyles } from '../constants/Typography';
 import { 
@@ -38,7 +35,6 @@ const Garage = () => {
   const [modalVisible, setModalVisible] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const { colors } = useTheme();
-  const insets = useSafeAreaInsets();
   
   // Subscribe to both stores
   const { cars: garageCars, removeFromGarage, clearGarage } = useGarageStore()
@@ -146,14 +142,7 @@ const Garage = () => {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={[styles.screenTitle, { color: colors.text }]}>My Garage</Text>
-        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
-          {garageCars.length} {garageCars.length === 1 ? 'car' : 'cars'} saved
-        </Text>
-      </View>
-      
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {garageCars.length === 0 ? (
         <View style={styles.emptyState}>
           <LinearGradient
@@ -195,7 +184,7 @@ const Garage = () => {
         isInGarage={true}
         onRemoveFromGarage={handleRemoveFromGarage}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -222,6 +211,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.xl,
   },
   emptyStateText: {
     fontSize: scaledFontSize(18),
@@ -317,6 +307,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: SPACING.md,
+    paddingTop: SPACING.lg,
     paddingBottom: CONTENT_PADDING.bottom,
   },
   header: {

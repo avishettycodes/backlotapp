@@ -7,9 +7,9 @@ import Animated, {
   useScrollViewOffset,
 } from 'react-native-reanimated';
 
-import { ThemedView } from '@/components/ThemedView';
-import { useBottomTabOverflow } from '@/components/ui/TabBarBackground';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { ThemedView } from './ThemedView';
+import { useBottomTabOverflow } from './ui/TabBarBackground';
+import { useColorScheme } from '../hooks/useColorScheme';
 
 const HEADER_HEIGHT = 250;
 
@@ -27,20 +27,20 @@ export default function ParallaxScrollView({
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollOffset = useScrollViewOffset(scrollRef);
   const bottom = useBottomTabOverflow();
+
   const headerAnimatedStyle = useAnimatedStyle(() => {
+    const translateY = interpolate(
+      scrollOffset.value,
+      [-HEADER_HEIGHT, 0, HEADER_HEIGHT],
+      [-HEADER_HEIGHT / 2, 0, HEADER_HEIGHT * 0.75]
+    );
+    const scale = interpolate(scrollOffset.value, [-HEADER_HEIGHT, 0, HEADER_HEIGHT], [2, 1, 1]);
+    
     return {
       transform: [
-        {
-          translateY: interpolate(
-            scrollOffset.value,
-            [-HEADER_HEIGHT, 0, HEADER_HEIGHT],
-            [-HEADER_HEIGHT / 2, 0, HEADER_HEIGHT * 0.75]
-          ),
-        },
-        {
-          scale: interpolate(scrollOffset.value, [-HEADER_HEIGHT, 0, HEADER_HEIGHT], [2, 1, 1]),
-        },
-      ],
+        { translateY },
+        { scale },
+      ] as any,
     };
   });
 
@@ -48,9 +48,14 @@ export default function ParallaxScrollView({
     <ThemedView style={styles.container}>
       <Animated.ScrollView
         ref={scrollRef}
-        scrollEventThrottle={16}
+        scrollEventThrottle={32}
         scrollIndicatorInsets={{ bottom }}
-        contentContainerStyle={{ paddingBottom: bottom }}>
+        contentContainerStyle={{ paddingBottom: bottom }}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        bouncesZoom={false}
+        decelerationRate="fast"
+        removeClippedSubviews={true}>
         <Animated.View
           style={[
             styles.header,

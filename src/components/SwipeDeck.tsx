@@ -8,6 +8,7 @@ import {
   StatusBar,
   TouchableOpacity,
   Animated,
+  ImageStyle,
 } from 'react-native';
 import Swiper from 'react-native-deck-swiper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -97,7 +98,7 @@ export default function SwipeDeck() {
       >
         <Image 
           source={{ uri: car.image }} 
-          style={styles.cardImage}
+          style={styles.cardImage as ImageStyle}
         />
         <LinearGradient
           colors={['transparent', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.9)']}
@@ -270,7 +271,7 @@ export default function SwipeDeck() {
       {isDark && carQueue.length > 0 && carQueue[currentIndex] && (
         <Image
           source={{ uri: carQueue[currentIndex].image }}
-          style={styles.backgroundImage}
+          style={styles.backgroundImage as ImageStyle}
           blurRadius={35}
         />
       )}
@@ -316,7 +317,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: '100%',
     height: '100%',
-  } as const,
+  } as ImageStyle,
   darkOverlay: {
     position: 'absolute',
     top: 0,
@@ -367,7 +368,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     resizeMode: 'cover',
-  } as const,
+  } as ImageStyle,
   gradientOverlay: {
     position: 'absolute',
     bottom: 0,
