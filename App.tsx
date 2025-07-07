@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -14,13 +15,39 @@ import Garage from './src/components/Garage';
 import Submit from './src/components/Submit';
 import SettingsModal from './src/components/SettingsModal';
 
+// Import the login component
+import AuthScreen from './src/components/AuthScreen';
+
 export type RootTabParamList = {
   Home: undefined;
   Garage: undefined;
   Post: undefined;
 };
 
+export type RootStackParamList = {
+  Auth: undefined;
+  MainApp: undefined;
+};
+
 const Tab = createBottomTabNavigator<RootTabParamList>();
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+// Auth Context
+interface AuthContextType {
+  isAuthenticated: boolean;
+  login: () => void;
+  logout: () => void;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
 // Settings Context
 interface SettingsContextType {
@@ -155,27 +182,38 @@ function TabNavigator() {
 function AppContent() {
   const { isDark } = useTheme();
   const [isSettingsVisible, setIsSettingsVisible] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   
   const openSettings = () => setIsSettingsVisible(true);
   const closeSettings = () => setIsSettingsVisible(false);
   
+  const login = () => setIsAuthenticated(true);
+  const logout = () => setIsAuthenticated(false);
+  
   return (
-    <SettingsContext.Provider value={{ isSettingsVisible, openSettings, closeSettings }}>
-      <GestureHandlerRootView style={{ flex: 1, backgroundColor: 'transparent' }}>
-        <SafeAreaProvider>
-          <NavigationContainer>
-            <TabNavigator />
-            <StatusBar style={isDark ? "light" : "dark"} />
-          </NavigationContainer>
-        </SafeAreaProvider>
-        
-        {/* Global Settings Modal */}
-        <SettingsModal
-          visible={isSettingsVisible}
-          onClose={closeSettings}
-        />
-      </GestureHandlerRootView>
-    </SettingsContext.Provider>
+    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+      <SettingsContext.Provider value={{ isSettingsVisible, openSettings, closeSettings }}>
+        <GestureHandlerRootView style={{ flex: 1, backgroundColor: 'transparent' }}>
+          <SafeAreaProvider>
+            <NavigationContainer>
+              <Stack.Navigator id={undefined} screenOptions={{ headerShown: false }}>
+                {isAuthenticated ? (
+                  <Stack.Screen name="MainApp" component={TabNavigator} />
+                ) : (
+                  <Stack.Screen name="Auth" component={AuthScreen} />
+                )}
+              </Stack.Navigator>
+            </NavigationContainer>
+          </SafeAreaProvider>
+          
+          {/* Global Settings Modal */}
+          <SettingsModal
+            visible={isSettingsVisible}
+            onClose={closeSettings}
+          />
+        </GestureHandlerRootView>
+      </SettingsContext.Provider>
+    </AuthContext.Provider>
   );
 }
 

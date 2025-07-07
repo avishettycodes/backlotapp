@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -40,7 +40,6 @@ const CARD_HEIGHT = CARD.height;
 export default function SwipeDeck() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCar, setSelectedCar] = useState<Car | null>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
   const { colors, isDark } = useTheme();
   
   const { addToGarage, clearGarage } = useGarageStore();
@@ -60,13 +59,14 @@ export default function SwipeDeck() {
   }, [clearGarage, clearQueue, initializeQueue]);
 
   const handleSwipe = (direction: 'left' | 'right') => {
-    const car = carQueue[currentIndex];
+    // Always use the first card in the queue, regardless of cardIndex
+    const car = carQueue[0];
+    if (!car) return;
+    
     if (__DEV__) console.log(`Swipe ${direction} completed for car:`, car);
     
-    // Remove the car from the queue regardless of direction
-    if (carQueue.some(c => c.id === car.id)) {
-      removeFromQueue(car.id);
-    }
+    // Remove the card from the queue regardless of direction
+    removeFromQueue(car.id);
     
     if (direction === 'right') {
       if (__DEV__) console.log('Adding car to garage...');
@@ -75,9 +75,6 @@ export default function SwipeDeck() {
       if (__DEV__) console.log('Car dismissed (swiped left)');
       // Left swipe = dismiss, don't add anywhere
     }
-    
-    // Move to next card
-    setCurrentIndex(prev => prev + 1);
   };
 
   const handleCardPress = (car: Car) => {
@@ -169,8 +166,8 @@ export default function SwipeDeck() {
       return renderNoMoreCards();
     }
 
-    const currentCar = carQueue[currentIndex];
-    const nextCar = carQueue[currentIndex + 1];
+    const currentCar = carQueue[0]; // Always use the first card
+    const nextCar = carQueue[1]; // The second card
 
     return (
       <View style={styles.cardStackContainer}>
@@ -184,13 +181,16 @@ export default function SwipeDeck() {
         {/* Foreground card (current card) */}
         <View style={styles.foregroundCard}>
           <Swiper
-            cards={[currentCar]}
+            cards={carQueue}
             cardIndex={0}
             stackSize={1}
             backgroundColor="transparent"
             cardVerticalMargin={0}
             cardHorizontalMargin={0}
             containerStyle={styles.swiperContainerStyle}
+            animateCardOpacity={false}
+            animateOverlayLabelsOpacity={true}
+            infinite={false}
             renderCard={(car: Car) => (
               <View style={styles.cardWrapper}>
                 {renderCard(car, false)}
@@ -268,9 +268,9 @@ export default function SwipeDeck() {
       </View>
       
       {/* Background Blur Effect - Only show in dark mode */}
-      {isDark && carQueue.length > 0 && carQueue[currentIndex] && (
+      {isDark && carQueue.length > 0 && carQueue[0] && (
         <Image
-          source={{ uri: carQueue[currentIndex].image }}
+          source={{ uri: carQueue[0].image }}
           style={styles.backgroundImage as ImageStyle}
           blurRadius={35}
         />

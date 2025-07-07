@@ -7,19 +7,21 @@ export interface Car {
   mileage: number
   price: number
   deal: 'good' | 'fair' | 'bad'
-  location?: string
-  priceRating?: string
-  sellerName?: string
-  title?: string
-  transmission?: string
-  listedDate?: string
-  exteriorColor?: string
-  interiorColor?: string
-  fuelType?: string
-  seats?: number
-  trim?: string
-  description?: string
-  pros?: string[]
-  cons?: string[]
+  location: string
+  priceRating: string
+  sellerName: string
+  sellerContact?: string
+  transmission: string
+  listedDate: string
+  exteriorColor: string
+  interiorColor: string
+  fuelType: string
+  seats: number
+  trim: string
+  vin?: string
+  description: string
+  pros: string[]
+  cons: string[]
   images?: string[]
+  titleStatus: 'Clean' | 'Salvage' | 'Rebuilt' | 'Lien'
 } 
